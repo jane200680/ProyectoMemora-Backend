@@ -108,6 +108,10 @@ function authorizeRole(...allowedRoles) {
   };
 }
 
+app.get("/api/health", (req, res) => {
+  res.status(200).json({ status: "ok", message: "API está online" });
+});
+
 app.post("/api/register", authLimiter, async (req, res) => {
   const parseResult = registerSchema.safeParse(req.body);
 
