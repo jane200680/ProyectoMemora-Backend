@@ -6,7 +6,8 @@ import type { PublicacionFeedRow } from "../types/publicacion.js";
 
 export async function findFeedAprobado(
   limite: number,
-  offset: number
+  offset: number,
+  idUsuarioActual: number | null
 ): Promise<PublicacionFeedRow[]> {
   const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
     `SELECT
@@ -23,13 +24,19 @@ export async function findFeedAprobado(
          WHERE am.id_publicacion = p.id_publicacion
          ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
        (SELECT COUNT(*) FROM comentario c
-         WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios
+         WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios,
+       (SELECT COUNT(*) FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion) AS total_reacciones,
+       EXISTS(
+         SELECT 1 FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion AND r.id_usuario = ?
+       ) AS reacciono
      FROM publicacion_cultural p
      JOIN usuario u ON u.id_usuario = p.id_usuario
      WHERE p.estado = 'Aprobada'
      ORDER BY p.fecha_publicacion DESC
      LIMIT ? OFFSET ?`,
-    [limite, offset]
+    [idUsuarioActual, limite, offset]
   );
 
   return rows;

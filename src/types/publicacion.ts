@@ -21,6 +21,8 @@ export interface PublicacionFeedRow {
   foto_perfil: string | null;
   imagen: string | null;
   total_comentarios: number;
+  total_reacciones: number;
+  reacciono: number;
 }
 
 export interface FeedQuery {

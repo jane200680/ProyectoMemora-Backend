@@ -33,6 +33,24 @@ export function authenticate(req: Request, res: Response, next: NextFunction): v
   }
 }
 
+export function authenticateOpcional(req: Request, res: Response, next: NextFunction): void {
+  const header = req.headers.authorization;
+  const token = header?.startsWith("Bearer ") ? header.slice(7) : undefined;
+
+  if (!token) {
+    next();
+    return;
+  }
+
+  try {
+    req.user = jwt.verify(token, env.jwt.secret) as AuthPayload;
+  } catch {
+    // Token invalido o expirado: se continua como usuario anonimo.
+  }
+
+  next();
+}
+
 export function authorize(...rolesPermitidos: AuthPayload["rol"][]) {
   return (req: Request, res: Response, next: NextFunction): void => {
     if (!req.user || !rolesPermitidos.includes(req.user.rol)) {

@@ -15,6 +15,8 @@ export interface FeedItemDTO {
   descripcion: string;
   imagen: string | null;
   comentarios: number;
+  reacciones: number;
+  reacciono: boolean;
 }
 
 export interface FeedDTO {
@@ -25,11 +27,15 @@ export interface FeedDTO {
   totalPaginas: number;
 }
 
-export async function obtenerFeed(pagina: number, limite: number): Promise<FeedDTO> {
+export async function obtenerFeed(
+  pagina: number,
+  limite: number,
+  idUsuarioActual: number | null
+): Promise<FeedDTO> {
   const offset = (pagina - 1) * limite;
 
   const [filas, total] = await Promise.all([
-    findFeedAprobado(limite, offset),
+    findFeedAprobado(limite, offset, idUsuarioActual),
     countFeedAprobado(),
   ]);
 
@@ -43,6 +49,8 @@ export async function obtenerFeed(pagina: number, limite: number): Promise<FeedD
     descripcion: fila.descripcion,
     imagen: fila.imagen,
     comentarios: fila.total_comentarios,
+    reacciones: fila.total_reacciones,
+    reacciono: Boolean(fila.reacciono),
   }));
 
   return {
