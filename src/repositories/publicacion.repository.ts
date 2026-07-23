@@ -1,5 +1,6 @@
-import type { RowDataPacket } from "mysql2";
+import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
+import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
 import type { PublicacionFeedRow } from "../types/publicacion.js";
 
 export async function findFeedAprobado(
@@ -31,6 +32,19 @@ export async function findFeedAprobado(
   );
 
   return rows;
+}
+
+export async function crearPublicacion(
+  idUsuario: number,
+  input: CrearPublicacionInput
+): Promise<number> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `INSERT INTO publicacion_cultural (titulo, descripcion, tipo_contenido, anio_contenido, id_usuario)
+     VALUES (?, ?, ?, ?, ?)`,
+    [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idUsuario]
+  );
+
+  return result.insertId;
 }
 
 export async function countFeedAprobado(): Promise<number> {

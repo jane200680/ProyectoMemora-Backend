@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
-import { obtenerFeed } from "../services/publicacion.service.js";
+import { crearPublicacionSchema } from "../schemas/publicacion.schema.js";
+import { crearPublicacion, obtenerFeed } from "../services/publicacion.service.js";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   const pagina = Math.max(1, Number(req.query.pagina) || 1);
@@ -7,4 +8,10 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
 
   const feed = await obtenerFeed(pagina, limite);
   res.json(feed);
+}
+
+export async function postPublicacion(req: Request, res: Response): Promise<void> {
+  const input = crearPublicacionSchema.parse(req.body);
+  const resultado = await crearPublicacion(req.user!.id_usuario, input);
+  res.status(201).json(resultado);
 }

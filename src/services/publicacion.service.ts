@@ -1,4 +1,9 @@
-import { countFeedAprobado, findFeedAprobado } from "../repositories/publicacion.repository.js";
+import {
+  countFeedAprobado,
+  crearPublicacion as crearPublicacionRepo,
+  findFeedAprobado,
+} from "../repositories/publicacion.repository.js";
+import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
 
 export interface FeedItemDTO {
   id: number;
@@ -47,4 +52,9 @@ export async function obtenerFeed(pagina: number, limite: number): Promise<FeedD
     total,
     totalPaginas: Math.max(1, Math.ceil(total / limite)),
   };
+}
+
+export async function crearPublicacion(idUsuario: number, input: CrearPublicacionInput) {
+  const idPublicacion = await crearPublicacionRepo(idUsuario, input);
+  return { id_publicacion: idPublicacion, estado: "Pendiente" as const };
 }
