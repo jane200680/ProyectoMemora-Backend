@@ -19,6 +19,8 @@ export const crearPublicacionSchema = z.object({
   descripcion: z.string().trim().min(10),
   tipo_contenido: z.enum(tiposContenido),
   anio_contenido: z.coerce.number().int().min(1800).max(anioActual).optional(),
+  categorias: z.array(z.coerce.number().int().positive()).optional(),
+  lugares: z.array(z.coerce.number().int().positive()).optional(),
 });
 
 export type CrearPublicacionInput = z.infer<typeof crearPublicacionSchema>;

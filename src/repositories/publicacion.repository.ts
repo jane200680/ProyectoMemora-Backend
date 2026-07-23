@@ -46,13 +46,45 @@ export async function crearPublicacion(
   idUsuario: number,
   input: CrearPublicacionInput
 ): Promise<number> {
-  const [result] = await pool.query<ResultSetHeader>(
-    `INSERT INTO publicacion_cultural (titulo, descripcion, tipo_contenido, anio_contenido, id_usuario)
-     VALUES (?, ?, ?, ?, ?)`,
-    [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idUsuario]
-  );
+  const conexion = await pool.getConnection();
 
-  return result.insertId;
+  try {
+    await conexion.beginTransaction();
+
+    const [result] = await conexion.query<ResultSetHeader>(
+      `INSERT INTO publicacion_cultural (titulo, descripcion, tipo_contenido, anio_contenido, id_usuario)
+       VALUES (?, ?, ?, ?, ?)`,
+      [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idUsuario]
+    );
+
+    const idPublicacion = result.insertId;
+
+    if (input.categorias?.length) {
+      await conexion.query(
+        `INSERT INTO publicacion_cultural_has_categoria_cultural
+           (publicacion_cultural_id_publicacion, categoria_cultural_id_categoria)
+         VALUES ?`,
+        [input.categorias.map((idCategoria) => [idPublicacion, idCategoria])]
+      );
+    }
+
+    if (input.lugares?.length) {
+      await conexion.query(
+        `INSERT INTO publicacion_cultural_has_lugar_cultural
+           (publicacion_cultural_id_publicacion, lugar_cultural_id_lugar)
+         VALUES ?`,
+        [input.lugares.map((idLugar) => [idPublicacion, idLugar])]
+      );
+    }
+
+    await conexion.commit();
+    return idPublicacion;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
 }
 
 export async function countFeedAprobado(): Promise<number> {
