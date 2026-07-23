@@ -1,4 +1,5 @@
 import { Router } from "express";
+import { adminRouter } from "./admin.routes.js";
 import { authRouter } from "./auth.routes.js";
 import { publicacionRouter } from "./publicacion.routes.js";
 
@@ -10,3 +11,4 @@ router.get("/health", (req, res) => {
 
 router.use("/auth", authRouter);
 router.use("/publicaciones", publicacionRouter);
+router.use("/admin", adminRouter);

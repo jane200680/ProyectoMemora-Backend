@@ -1,7 +1,9 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
-import type { UsuarioConHash } from "../types/usuario.js";
+import type { EstadoUsuarioInput } from "../schemas/admin.schema.js";
 import type { RegisterInput } from "../schemas/auth.schema.js";
+import type { Usuario } from "../types/usuario.js";
+import type { UsuarioConHash } from "../types/usuario.js";
 
 export async function crearUsuario(
   input: RegisterInput,
@@ -55,4 +57,26 @@ export async function actualizarUltimoAcceso(idUsuario: number): Promise<void> {
     `UPDATE autenticacion SET ultimo_acceso = NOW() WHERE usuario_id_usuario = ?`,
     [idUsuario]
   );
+}
+
+export async function listarUsuarios(): Promise<Usuario[]> {
+  const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+     FROM usuario
+     ORDER BY id_usuario DESC`
+  );
+
+  return rows;
+}
+
+export async function actualizarEstadoUsuario(
+  idUsuario: number,
+  input: EstadoUsuarioInput
+): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE usuario SET estado = ? WHERE id_usuario = ?`,
+    [input.estado, idUsuario]
+  );
+
+  return result.affectedRows > 0;
 }

@@ -1,5 +1,6 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
+import type { EstadoPublicacionInput } from "../schemas/admin.schema.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
 import type { PublicacionFeedRow } from "../types/publicacion.js";
 
@@ -53,4 +54,42 @@ export async function countFeedAprobado(): Promise<number> {
   );
 
   return Number(rows[0]?.total ?? 0);
+}
+
+export async function findPendientes(): Promise<PublicacionFeedRow[]> {
+  const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
+    `SELECT
+       p.id_publicacion,
+       p.titulo,
+       p.descripcion,
+       p.tipo_contenido,
+       p.fecha_publicacion,
+       u.id_usuario,
+       u.nombre,
+       u.apellido,
+       u.foto_perfil,
+       (SELECT am.url_archivo FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion
+         ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
+       (SELECT COUNT(*) FROM comentario c
+         WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios
+     FROM publicacion_cultural p
+     JOIN usuario u ON u.id_usuario = p.id_usuario
+     WHERE p.estado = 'Pendiente'
+     ORDER BY p.fecha_publicacion ASC`
+  );
+
+  return rows;
+}
+
+export async function actualizarEstadoPublicacion(
+  idPublicacion: number,
+  input: EstadoPublicacionInput
+): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE publicacion_cultural SET estado = ? WHERE id_publicacion = ?`,
+    [input.estado, idPublicacion]
+  );
+
+  return result.affectedRows > 0;
 }
