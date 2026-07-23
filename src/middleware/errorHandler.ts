@@ -1,4 +1,5 @@
 import { NextFunction, Request, Response } from "express";
+import { ZodError } from "zod";
 
 export class HttpError extends Error {
   constructor(public status: number, message: string) {
@@ -18,6 +19,11 @@ export function errorHandler(
 ): void {
   if (res.headersSent) {
     next(err);
+    return;
+  }
+
+  if (err instanceof ZodError) {
+    res.status(400).json({ message: "Datos inválidos", errores: err.issues });
     return;
   }
 
