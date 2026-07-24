@@ -2,6 +2,7 @@ import {
   countFeedAprobado,
   crearPublicacion as crearPublicacionRepo,
   findFeedAprobado,
+  type FeedFiltros,
 } from "../repositories/publicacion.repository.js";
 import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
@@ -32,13 +33,14 @@ export interface FeedDTO {
 export async function obtenerFeed(
   pagina: number,
   limite: number,
-  idUsuarioActual: number | null
+  idUsuarioActual: number | null,
+  filtros: FeedFiltros = {}
 ): Promise<FeedDTO> {
   const offset = (pagina - 1) * limite;
 
   const [filas, total] = await Promise.all([
-    findFeedAprobado(limite, offset, idUsuarioActual),
-    countFeedAprobado(),
+    findFeedAprobado(limite, offset, idUsuarioActual, filtros),
+    countFeedAprobado(filtros),
   ]);
 
   const data: FeedItemDTO[] = filas.map((fila) => ({

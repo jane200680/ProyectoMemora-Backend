@@ -1,12 +1,19 @@
 import type { Request, Response } from "express";
-import { crearPublicacionSchema } from "../schemas/publicacion.schema.js";
+import { crearPublicacionSchema, feedQuerySchema } from "../schemas/publicacion.schema.js";
 import { crearPublicacion, obtenerFeed } from "../services/publicacion.service.js";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
-  const pagina = Math.max(1, Number(req.query.pagina) || 1);
-  const limite = Math.min(50, Math.max(1, Number(req.query.limite) || 10));
+  const { pagina, limite, tipo_contenido, categoria, lugar, anio, q } = feedQuerySchema.parse(
+    req.query
+  );
 
-  const feed = await obtenerFeed(pagina, limite, req.user?.id_usuario ?? null);
+  const feed = await obtenerFeed(pagina, limite, req.user?.id_usuario ?? null, {
+    tipo_contenido,
+    categoria,
+    lugar,
+    anio,
+    q,
+  });
   res.json(feed);
 }
 

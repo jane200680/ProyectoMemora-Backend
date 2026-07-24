@@ -35,3 +35,15 @@ export const crearPublicacionSchema = z.object({
 });
 
 export type CrearPublicacionInput = z.infer<typeof crearPublicacionSchema>;
+
+export const feedQuerySchema = z.object({
+  pagina: z.coerce.number().int().positive().optional().default(1),
+  limite: z.coerce.number().int().positive().max(50).optional().default(10),
+  tipo_contenido: z.enum(tiposContenido).optional(),
+  categoria: z.coerce.number().int().positive().optional(),
+  lugar: z.coerce.number().int().positive().optional(),
+  anio: z.coerce.number().int().min(1800).max(anioActual).optional(),
+  q: z.string().trim().min(1).max(200).optional(),
+});
+
+export type FeedQueryInput = z.infer<typeof feedQuerySchema>;

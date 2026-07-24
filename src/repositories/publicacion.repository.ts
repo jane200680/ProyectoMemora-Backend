@@ -1,14 +1,61 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoPublicacionInput } from "../schemas/admin.schema.js";
-import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
+import type { CrearPublicacionInput, FeedQueryInput } from "../schemas/publicacion.schema.js";
 import type { ArchivoMultimediaInput, PublicacionFeedRow } from "../types/publicacion.js";
+
+export type FeedFiltros = Pick<FeedQueryInput, "tipo_contenido" | "categoria" | "lugar" | "anio" | "q">;
+
+function construirFiltrosFeed(filtros: FeedFiltros) {
+  const condiciones: string[] = [];
+  const parametros: (string | number)[] = [];
+
+  if (filtros.tipo_contenido) {
+    condiciones.push("p.tipo_contenido = ?");
+    parametros.push(filtros.tipo_contenido);
+  }
+
+  if (filtros.anio) {
+    condiciones.push("p.anio_contenido = ?");
+    parametros.push(filtros.anio);
+  }
+
+  if (filtros.categoria) {
+    condiciones.push(
+      `EXISTS (SELECT 1 FROM publicacion_cultural_has_categoria_cultural pc
+         WHERE pc.publicacion_cultural_id_publicacion = p.id_publicacion
+           AND pc.categoria_cultural_id_categoria = ?)`
+    );
+    parametros.push(filtros.categoria);
+  }
+
+  if (filtros.lugar) {
+    condiciones.push(
+      `EXISTS (SELECT 1 FROM publicacion_cultural_has_lugar_cultural pl
+         WHERE pl.publicacion_cultural_id_publicacion = p.id_publicacion
+           AND pl.lugar_cultural_id_lugar = ?)`
+    );
+    parametros.push(filtros.lugar);
+  }
+
+  if (filtros.q) {
+    condiciones.push("(p.titulo LIKE ? OR p.descripcion LIKE ?)");
+    const patron = `%${filtros.q}%`;
+    parametros.push(patron, patron);
+  }
+
+  return { condiciones, parametros };
+}
 
 export async function findFeedAprobado(
   limite: number,
   offset: number,
-  idUsuarioActual: number | null
+  idUsuarioActual: number | null,
+  filtros: FeedFiltros = {}
 ): Promise<PublicacionFeedRow[]> {
+  const { condiciones, parametros } = construirFiltrosFeed(filtros);
+  const whereExtra = condiciones.length ? ` AND ${condiciones.join(" AND ")}` : "";
+
   const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
     `SELECT
        p.id_publicacion,
@@ -33,10 +80,10 @@ export async function findFeedAprobado(
        ) AS reacciono
      FROM publicacion_cultural p
      JOIN usuario u ON u.id_usuario = p.id_usuario
-     WHERE p.estado = 'Aprobada'
+     WHERE p.estado = 'Aprobada'${whereExtra}
      ORDER BY p.fecha_publicacion DESC
      LIMIT ? OFFSET ?`,
-    [idUsuarioActual, limite, offset]
+    [idUsuarioActual, ...parametros, limite, offset]
   );
 
   return rows;
@@ -96,9 +143,13 @@ export async function crearPublicacion(
   }
 }
 
-export async function countFeedAprobado(): Promise<number> {
+export async function countFeedAprobado(filtros: FeedFiltros = {}): Promise<number> {
+  const { condiciones, parametros } = construirFiltrosFeed(filtros);
+  const whereExtra = condiciones.length ? ` AND ${condiciones.join(" AND ")}` : "";
+
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT COUNT(*) AS total FROM publicacion_cultural WHERE estado = 'Aprobada'`
+    `SELECT COUNT(*) AS total FROM publicacion_cultural p WHERE p.estado = 'Aprobada'${whereExtra}`,
+    parametros
   );
 
   return Number(rows[0]?.total ?? 0);
