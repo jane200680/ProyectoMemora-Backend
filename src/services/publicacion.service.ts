@@ -3,7 +3,9 @@ import {
   crearPublicacion as crearPublicacionRepo,
   findFeedAprobado,
 } from "../repositories/publicacion.repository.js";
+import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
+import type { ArchivoMultimediaInput, TipoArchivo } from "../types/publicacion.js";
 
 export interface FeedItemDTO {
   id: number;
@@ -62,7 +64,25 @@ export async function obtenerFeed(
   };
 }
 
-export async function crearPublicacion(idUsuario: number, input: CrearPublicacionInput) {
-  const idPublicacion = await crearPublicacionRepo(idUsuario, input);
+function tipoArchivoDesdeMime(mimetype: string): TipoArchivo {
+  if (mimetype.startsWith("image/")) return "Imagen";
+  if (mimetype.startsWith("video/")) return "Video";
+  if (mimetype.startsWith("audio/")) return "Audio";
+  return "Documento";
+}
+
+export async function crearPublicacion(
+  idUsuario: number,
+  input: CrearPublicacionInput,
+  archivos: Express.Multer.File[] = []
+) {
+  const archivosSubidos: ArchivoMultimediaInput[] = await Promise.all(
+    archivos.map(async (archivo) => ({
+      tipo_archivo: tipoArchivoDesdeMime(archivo.mimetype),
+      url_archivo: await subirArchivoS3(archivo, "publicaciones"),
+    }))
+  );
+
+  const idPublicacion = await crearPublicacionRepo(idUsuario, input, archivosSubidos);
   return { id_publicacion: idPublicacion, estado: "Pendiente" as const };
 }

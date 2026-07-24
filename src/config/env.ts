@@ -34,4 +34,9 @@ export const env = {
   },
 
   frontendUrl: process.env.FRONTEND_URL ?? "http://localhost:5173",
+
+  aws: {
+    region: process.env.AWS_REGION ?? "us-east-1",
+    bucket: process.env.AWS_S3_BUCKET ?? "",
+  },
 };

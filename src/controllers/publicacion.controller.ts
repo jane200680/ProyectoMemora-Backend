@@ -12,6 +12,7 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
 
 export async function postPublicacion(req: Request, res: Response): Promise<void> {
   const input = crearPublicacionSchema.parse(req.body);
-  const resultado = await crearPublicacion(req.user!.id_usuario, input);
+  const archivos = (req.files as Express.Multer.File[] | undefined) ?? [];
+  const resultado = await crearPublicacion(req.user!.id_usuario, input, archivos);
   res.status(201).json(resultado);
 }

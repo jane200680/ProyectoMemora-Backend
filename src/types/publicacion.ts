@@ -29,3 +29,10 @@ export interface FeedQuery {
   pagina: number;
   limite: number;
 }
+
+export type TipoArchivo = "Imagen" | "Video" | "Audio" | "Documento";
+
+export interface ArchivoMultimediaInput {
+  tipo_archivo: TipoArchivo;
+  url_archivo: string;
+}

@@ -3,11 +3,12 @@ import { getComentarios, postComentario } from "../controllers/comentario.contro
 import { getFeed, postPublicacion } from "../controllers/publicacion.controller.js";
 import { postReaccion } from "../controllers/reaccion.controller.js";
 import { authenticate, authenticateOpcional } from "../middleware/auth.js";
+import { uploadArchivosMultimedia } from "../middleware/upload.js";
 
 export const publicacionRouter = Router();
 
 publicacionRouter.get("/", authenticateOpcional, getFeed);
-publicacionRouter.post("/", authenticate, postPublicacion);
+publicacionRouter.post("/", authenticate, uploadArchivosMultimedia, postPublicacion);
 
 publicacionRouter.post("/:id/reacciones", authenticate, postReaccion);
 

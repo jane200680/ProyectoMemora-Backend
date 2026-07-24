@@ -2,7 +2,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoPublicacionInput } from "../schemas/admin.schema.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
-import type { PublicacionFeedRow } from "../types/publicacion.js";
+import type { ArchivoMultimediaInput, PublicacionFeedRow } from "../types/publicacion.js";
 
 export async function findFeedAprobado(
   limite: number,
@@ -44,7 +44,8 @@ export async function findFeedAprobado(
 
 export async function crearPublicacion(
   idUsuario: number,
-  input: CrearPublicacionInput
+  input: CrearPublicacionInput,
+  archivos: ArchivoMultimediaInput[] = []
 ): Promise<number> {
   const conexion = await pool.getConnection();
 
@@ -74,6 +75,14 @@ export async function crearPublicacion(
            (publicacion_cultural_id_publicacion, lugar_cultural_id_lugar)
          VALUES ?`,
         [input.lugares.map((idLugar) => [idPublicacion, idLugar])]
+      );
+    }
+
+    if (archivos.length) {
+      await conexion.query(
+        `INSERT INTO archivo_multimedia (tipo_archivo, url_archivo, id_publicacion)
+         VALUES ?`,
+        [archivos.map((archivo) => [archivo.tipo_archivo, archivo.url_archivo, idPublicacion])]
       );
     }
 
