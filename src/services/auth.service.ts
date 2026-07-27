@@ -11,6 +11,7 @@ import {
 } from "../repositories/usuario.repository.js";
 import type { ActualizarPerfilInput, LoginInput, RegisterInput } from "../schemas/auth.schema.js";
 import type { Usuario } from "../types/usuario.js";
+import { subirArchivoS3 } from "./s3.service.js";
 
 const SALT_ROUNDS = 10;
 
@@ -65,10 +66,16 @@ export async function iniciarSesion(input: LoginInput): Promise<{ token: string;
 
 export async function actualizarPerfil(
   idUsuario: number,
-  input: ActualizarPerfilInput
+  input: ActualizarPerfilInput,
+  archivoFotoPerfil?: Express.Multer.File
 ): Promise<Usuario> {
+  let fotoPerfilUrl: string | undefined;
+  if (archivoFotoPerfil) {
+    fotoPerfilUrl = await subirArchivoS3(archivoFotoPerfil, "perfiles");
+  }
+
   try {
-    await actualizarPerfilRepo(idUsuario, input);
+    await actualizarPerfilRepo(idUsuario, input, fotoPerfilUrl);
   } catch (error) {
     if (esErrorDeDuplicado(error)) {
       throw new HttpError(409, "El nombre de usuario ya está en uso");

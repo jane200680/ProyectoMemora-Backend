@@ -16,6 +16,7 @@ export async function login(req: Request, res: Response): Promise<void> {
 
 export async function patchPerfil(req: Request, res: Response): Promise<void> {
   const input = actualizarPerfilSchema.parse(req.body);
-  const usuario = await actualizarPerfil(req.user!.id_usuario, input);
+  const archivo = req.file as Express.Multer.File | undefined;
+  const usuario = await actualizarPerfil(req.user!.id_usuario, input, archivo);
   res.status(200).json(usuario);
 }

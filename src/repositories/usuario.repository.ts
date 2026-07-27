@@ -94,11 +94,22 @@ export async function buscarPorId(idUsuario: number): Promise<Usuario | null> {
 
 export async function actualizarPerfil(
   idUsuario: number,
-  input: ActualizarPerfilInput
+  input: ActualizarPerfilInput,
+  fotoPerfil?: string
 ): Promise<boolean> {
+  const campos = ["nombre_usuario = ?", "nombre = ?", "apellido = ?"];
+  const valores: (string | number)[] = [input.nombre_usuario, input.nombre, input.apellido];
+
+  if (fotoPerfil) {
+    campos.push("foto_perfil = ?");
+    valores.push(fotoPerfil);
+  }
+
+  valores.push(idUsuario);
+
   const [result] = await pool.query<ResultSetHeader>(
-    `UPDATE usuario SET nombre_usuario = ?, nombre = ?, apellido = ? WHERE id_usuario = ?`,
-    [input.nombre_usuario, input.nombre, input.apellido, idUsuario]
+    `UPDATE usuario SET ${campos.join(", ")} WHERE id_usuario = ?`,
+    valores
   );
 
   return result.affectedRows > 0;

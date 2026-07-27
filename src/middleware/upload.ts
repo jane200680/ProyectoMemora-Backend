@@ -25,3 +25,17 @@ export const uploadArchivosMultimedia = multer({
     cb(null, true);
   },
 }).array("archivos", 5);
+
+const TIPOS_IMAGEN = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+
+export const uploadFotoPerfil = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (!TIPOS_IMAGEN.includes(file.mimetype)) {
+      cb(new HttpError(400, `Tipo de archivo no permitido: ${file.mimetype}`));
+      return;
+    }
+    cb(null, true);
+  },
+}).single("foto_perfil");

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { login, patchPerfil, register } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.js";
+import { uploadFotoPerfil } from "../middleware/upload.js";
 
 export const authRouter = Router();
 
@@ -73,7 +74,7 @@ authRouter.post("/login", login);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required: [nombre_usuario, nombre, apellido]
@@ -81,6 +82,7 @@ authRouter.post("/login", login);
  *               nombre_usuario: { type: string }
  *               nombre: { type: string }
  *               apellido: { type: string }
+ *               foto_perfil: { type: string, format: binary }
  *     responses:
  *       200:
  *         description: Perfil actualizado
@@ -89,4 +91,4 @@ authRouter.post("/login", login);
  *       409:
  *         description: Nombre de usuario ya en uso
  */
-authRouter.patch("/perfil", authenticate, patchPerfil);
+authRouter.patch("/perfil", authenticate, uploadFotoPerfil, patchPerfil);
