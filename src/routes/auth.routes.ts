@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { login, register } from "../controllers/auth.controller.js";
+import { login, patchPerfil, register } from "../controllers/auth.controller.js";
+import { authenticate } from "../middleware/auth.js";
 
 export const authRouter = Router();
 
@@ -60,3 +61,32 @@ authRouter.post("/register", register);
  *               $ref: '#/components/schemas/Error'
  */
 authRouter.post("/login", login);
+
+/**
+ * @openapi
+ * /auth/perfil:
+ *   patch:
+ *     tags: [Auth]
+ *     summary: Actualizar el perfil del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [nombre_usuario, nombre, apellido]
+ *             properties:
+ *               nombre_usuario: { type: string }
+ *               nombre: { type: string }
+ *               apellido: { type: string }
+ *     responses:
+ *       200:
+ *         description: Perfil actualizado
+ *       401:
+ *         description: No autenticado
+ *       409:
+ *         description: Nombre de usuario ya en uso
+ */
+authRouter.patch("/perfil", authenticate, patchPerfil);

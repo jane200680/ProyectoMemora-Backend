@@ -3,11 +3,13 @@ import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import {
+  actualizarPerfil as actualizarPerfilRepo,
   actualizarUltimoAcceso,
   buscarPorCorreoConHash,
+  buscarPorId,
   crearUsuario,
 } from "../repositories/usuario.repository.js";
-import type { LoginInput, RegisterInput } from "../schemas/auth.schema.js";
+import type { ActualizarPerfilInput, LoginInput, RegisterInput } from "../schemas/auth.schema.js";
 import type { Usuario } from "../types/usuario.js";
 
 const SALT_ROUNDS = 10;
@@ -59,4 +61,25 @@ export async function iniciarSesion(input: LoginInput): Promise<{ token: string;
   } as jwt.SignOptions);
 
   return { token, usuario };
+}
+
+export async function actualizarPerfil(
+  idUsuario: number,
+  input: ActualizarPerfilInput
+): Promise<Usuario> {
+  try {
+    await actualizarPerfilRepo(idUsuario, input);
+  } catch (error) {
+    if (esErrorDeDuplicado(error)) {
+      throw new HttpError(409, "El nombre de usuario ya está en uso");
+    }
+    throw error;
+  }
+
+  const usuario = await buscarPorId(idUsuario);
+  if (!usuario) {
+    throw new HttpError(404, "Usuario no encontrado");
+  }
+
+  return usuario;
 }

@@ -1,7 +1,7 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoUsuarioInput } from "../schemas/admin.schema.js";
-import type { RegisterInput } from "../schemas/auth.schema.js";
+import type { ActualizarPerfilInput, RegisterInput } from "../schemas/auth.schema.js";
 import type { Usuario } from "../types/usuario.js";
 import type { UsuarioConHash } from "../types/usuario.js";
 
@@ -78,6 +78,30 @@ export async function obtenerNombreUsuario(
   );
 
   return (rows[0] as { nombre: string; apellido: string } | undefined) ?? null;
+}
+
+export async function buscarPorId(idUsuario: number): Promise<Usuario | null> {
+  const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+     FROM usuario
+     WHERE id_usuario = ?
+     LIMIT 1`,
+    [idUsuario]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function actualizarPerfil(
+  idUsuario: number,
+  input: ActualizarPerfilInput
+): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `UPDATE usuario SET nombre_usuario = ?, nombre = ?, apellido = ? WHERE id_usuario = ?`,
+    [input.nombre_usuario, input.nombre, input.apellido, idUsuario]
+  );
+
+  return result.affectedRows > 0;
 }
 
 export async function listarIdsAdministradores(): Promise<number[]> {

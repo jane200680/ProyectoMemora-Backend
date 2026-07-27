@@ -16,3 +16,11 @@ export const loginSchema = z.object({
 });
 
 export type LoginInput = z.infer<typeof loginSchema>;
+
+export const actualizarPerfilSchema = z.object({
+  nombre_usuario: z.string().trim().min(3).max(100),
+  nombre: z.string().trim().min(1).max(100),
+  apellido: z.string().trim().min(1).max(150),
+});
+
+export type ActualizarPerfilInput = z.infer<typeof actualizarPerfilSchema>;
