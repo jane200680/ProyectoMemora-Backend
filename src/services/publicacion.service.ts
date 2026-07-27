@@ -18,6 +18,7 @@ export interface FeedItemDTO {
   titulo: string;
   descripcion: string;
   imagen: string | null;
+  imagenes: string[];
   comentarios: number;
   reacciones: number;
   reacciono: boolean;
@@ -53,6 +54,7 @@ export async function obtenerFeed(
     titulo: fila.titulo,
     descripcion: fila.descripcion,
     imagen: fila.imagen,
+    imagenes: fila.imagenes ? fila.imagenes.split("||") : [],
     comentarios: fila.total_comentarios,
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),

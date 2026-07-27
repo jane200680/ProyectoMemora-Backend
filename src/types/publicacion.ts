@@ -20,6 +20,7 @@ export interface PublicacionFeedRow {
   apellido: string;
   foto_perfil: string | null;
   imagen: string | null;
+  imagenes: string | null;
   total_comentarios: number;
   total_reacciones: number;
   reacciono: number;

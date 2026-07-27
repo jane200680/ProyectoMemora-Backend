@@ -70,6 +70,9 @@ export async function findFeedAprobado(
        (SELECT am.url_archivo FROM archivo_multimedia am
          WHERE am.id_publicacion = p.id_publicacion
          ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
+       (SELECT GROUP_CONCAT(am.url_archivo ORDER BY am.id_archivo ASC SEPARATOR '||')
+         FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion AND am.tipo_archivo = 'Imagen') AS imagenes,
        (SELECT COUNT(*) FROM comentario c
          WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios,
        (SELECT COUNT(*) FROM reaccion r
