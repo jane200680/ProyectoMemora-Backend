@@ -4,6 +4,7 @@ import {
   findFeedAprobado,
   type FeedFiltros,
 } from "../repositories/publicacion.repository.js";
+import { notificarAdminsPublicacionPendiente } from "./notificacion.service.js";
 import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
 import type { ArchivoMultimediaInput, TipoArchivo } from "../types/publicacion.js";
@@ -86,5 +87,6 @@ export async function crearPublicacion(
   );
 
   const idPublicacion = await crearPublicacionRepo(idUsuario, input, archivosSubidos);
+  await notificarAdminsPublicacionPendiente(idPublicacion, input.titulo);
   return { id_publicacion: idPublicacion, estado: "Pendiente" as const };
 }

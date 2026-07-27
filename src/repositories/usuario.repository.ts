@@ -69,6 +69,25 @@ export async function listarUsuarios(): Promise<Usuario[]> {
   return rows;
 }
 
+export async function obtenerNombreUsuario(
+  idUsuario: number
+): Promise<{ nombre: string; apellido: string } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT nombre, apellido FROM usuario WHERE id_usuario = ?`,
+    [idUsuario]
+  );
+
+  return (rows[0] as { nombre: string; apellido: string } | undefined) ?? null;
+}
+
+export async function listarIdsAdministradores(): Promise<number[]> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id_usuario FROM usuario WHERE rol = 'Administrador' AND estado = 'Activo'`
+  );
+
+  return rows.map((fila) => fila.id_usuario as number);
+}
+
 export async function actualizarEstadoUsuario(
   idUsuario: number,
   input: EstadoUsuarioInput

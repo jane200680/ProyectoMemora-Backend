@@ -8,6 +8,7 @@ import {
   listarUsuarios as listarUsuariosRepo,
 } from "../repositories/usuario.repository.js";
 import type { EstadoPublicacionInput, EstadoUsuarioInput } from "../schemas/admin.schema.js";
+import { notificarCambioEstadoPublicacion } from "./notificacion.service.js";
 
 export async function listarUsuarios() {
   return listarUsuariosRepo();
@@ -41,4 +42,6 @@ export async function actualizarEstadoPublicacion(
   if (!actualizado) {
     throw new HttpError(404, "Publicación no encontrada");
   }
+
+  await notificarCambioEstadoPublicacion(idPublicacion, input.estado);
 }

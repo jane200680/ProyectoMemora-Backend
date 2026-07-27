@@ -143,6 +143,17 @@ export async function crearPublicacion(
   }
 }
 
+export async function obtenerAutorPublicacion(
+  idPublicacion: number
+): Promise<{ id_usuario: number; titulo: string } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id_usuario, titulo FROM publicacion_cultural WHERE id_publicacion = ?`,
+    [idPublicacion]
+  );
+
+  return (rows[0] as { id_usuario: number; titulo: string } | undefined) ?? null;
+}
+
 export async function countFeedAprobado(filtros: FeedFiltros = {}): Promise<number> {
   const { condiciones, parametros } = construirFiltrosFeed(filtros);
   const whereExtra = condiciones.length ? ` AND ${condiciones.join(" AND ")}` : "";
