@@ -8,6 +8,12 @@ import { env } from "./config/env.js";
 import { swaggerSpec } from "./config/swagger.js";
 import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
 import { apiRateLimiter } from "./middleware/rateLimiter.js";
+import {
+  swaggerGuard,
+  swaggerLoginPage,
+  swaggerLoginSubmit,
+  swaggerLogout,
+} from "./middleware/swaggerAuth.js";
 import { router } from "./routes/index.js";
 
 const app = express();
@@ -16,12 +22,22 @@ app.use(helmet());
 app.use(cors({ origin: env.frontendUrl, credentials: true }));
 app.use(express.json());
 app.use(morgan(env.nodeEnv === "development" ? "dev" : "combined"));
-app.use(
-  "/api/docs",
-  helmet({ contentSecurityPolicy: false }),
-  swaggerUi.serve,
-  swaggerUi.setup(swaggerSpec)
-);
+
+if (env.swagger.password) {
+  app.get("/api/docs/login", swaggerLoginPage);
+  app.post("/api/docs/login", express.urlencoded({ extended: false }), swaggerLoginSubmit);
+  app.post("/api/docs/logout", swaggerLogout);
+  app.use(
+    "/api/docs",
+    helmet({ contentSecurityPolicy: false }),
+    swaggerGuard,
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerSpec)
+  );
+} else {
+  console.warn("SWAGGER_PASSWORD no definido: /api/docs deshabilitado");
+}
+
 app.use("/api", apiRateLimiter, router);
 
 app.use(notFoundHandler);
