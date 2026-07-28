@@ -37,3 +37,9 @@ export interface ArchivoMultimediaInput {
   tipo_archivo: TipoArchivo;
   url_archivo: string;
 }
+
+export interface ArchivoMultimediaRow {
+  id_archivo: number;
+  tipo_archivo: TipoArchivo;
+  url_archivo: string;
+}

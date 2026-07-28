@@ -132,7 +132,8 @@ export async function obtenerPublicacionPropia(idUsuario: number, idPublicacion:
 export async function editarPublicacion(
   idUsuario: number,
   idPublicacion: number,
-  input: EditarPublicacionInput
+  input: EditarPublicacionInput,
+  archivos: Express.Multer.File[] = []
 ): Promise<void> {
   const publicacion = await obtenerAutorPublicacion(idPublicacion);
 
@@ -144,6 +145,13 @@ export async function editarPublicacion(
     throw new HttpError(403, "No puedes editar una publicación que no es tuya");
   }
 
-  await actualizarPublicacionRepo(idPublicacion, input);
+  const archivosSubidos: ArchivoMultimediaInput[] = await Promise.all(
+    archivos.map(async (archivo) => ({
+      tipo_archivo: tipoArchivoDesdeMime(archivo.mimetype),
+      url_archivo: await subirArchivoS3(archivo, "publicaciones"),
+    }))
+  );
+
+  await actualizarPublicacionRepo(idPublicacion, input, archivosSubidos);
   await notificarAdminsPublicacionPendiente(idPublicacion, input.titulo);
 }

@@ -43,6 +43,9 @@ export const editarPublicacionSchema = z.object({
   anio_contenido: z.coerce.number().int().min(1800).max(anioActual).optional(),
   categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
   lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
+  archivos_eliminar: z
+    .preprocess(parseListaIds, z.array(z.coerce.number().int().positive()))
+    .default([]),
 });
 
 export type EditarPublicacionInput = z.infer<typeof editarPublicacionSchema>;

@@ -164,7 +164,7 @@ publicacionRouter.get("/:id/editar", authenticate, getPublicacionPropia);
  *       404:
  *         description: Publicación no encontrada
  */
-publicacionRouter.patch("/:id", authenticate, patchPublicacion);
+publicacionRouter.patch("/:id", authenticate, uploadArchivosMultimedia, patchPublicacion);
 
 /**
  * @openapi

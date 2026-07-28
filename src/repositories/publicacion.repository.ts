@@ -6,7 +6,11 @@ import type {
   EditarPublicacionInput,
   FeedQueryInput,
 } from "../schemas/publicacion.schema.js";
-import type { ArchivoMultimediaInput, PublicacionFeedRow } from "../types/publicacion.js";
+import type {
+  ArchivoMultimediaInput,
+  ArchivoMultimediaRow,
+  PublicacionFeedRow,
+} from "../types/publicacion.js";
 
 export type FeedFiltros = Pick<FeedQueryInput, "tipo_contenido" | "categoria" | "lugar" | "anio" | "q">;
 
@@ -159,6 +163,7 @@ export interface DetallePublicacion {
   anio_contenido: number | null;
   categorias: number[];
   lugares: number[];
+  archivos: ArchivoMultimediaRow[];
 }
 
 export async function obtenerDetallePublicacion(
@@ -185,6 +190,12 @@ export async function obtenerDetallePublicacion(
     [idPublicacion]
   );
 
+  const [archivoRows] = await pool.query<(ArchivoMultimediaRow & RowDataPacket)[]>(
+    `SELECT id_archivo, tipo_archivo, url_archivo FROM archivo_multimedia
+     WHERE id_publicacion = ? ORDER BY id_archivo ASC`,
+    [idPublicacion]
+  );
+
   return {
     id_publicacion: fila.id_publicacion,
     id_usuario: fila.id_usuario,
@@ -194,12 +205,14 @@ export async function obtenerDetallePublicacion(
     anio_contenido: fila.anio_contenido,
     categorias: categoriaRows.map((fila) => fila.id as number),
     lugares: lugarRows.map((fila) => fila.id as number),
+    archivos: archivoRows,
   };
 }
 
 export async function actualizarPublicacion(
   idPublicacion: number,
-  input: EditarPublicacionInput
+  input: EditarPublicacionInput,
+  archivosNuevos: ArchivoMultimediaInput[] = []
 ): Promise<void> {
   const conexion = await pool.getConnection();
 
@@ -240,6 +253,22 @@ export async function actualizarPublicacion(
            (publicacion_cultural_id_publicacion, lugar_cultural_id_lugar)
          VALUES ?`,
         [input.lugares.map((idLugar) => [idPublicacion, idLugar])]
+      );
+    }
+
+    if (input.archivos_eliminar.length) {
+      await conexion.query(
+        `DELETE FROM archivo_multimedia
+         WHERE id_publicacion = ? AND id_archivo IN (?)`,
+        [idPublicacion, input.archivos_eliminar]
+      );
+    }
+
+    if (archivosNuevos.length) {
+      await conexion.query(
+        `INSERT INTO archivo_multimedia (tipo_archivo, url_archivo, id_publicacion)
+         VALUES ?`,
+        [archivosNuevos.map((archivo) => [archivo.tipo_archivo, archivo.url_archivo, idPublicacion])]
       );
     }
 

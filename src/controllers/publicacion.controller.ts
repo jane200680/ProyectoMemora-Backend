@@ -49,6 +49,7 @@ export async function getPublicacionPropia(req: Request, res: Response): Promise
 export async function patchPublicacion(req: Request, res: Response): Promise<void> {
   const idPublicacion = Number(req.params.id);
   const input = editarPublicacionSchema.parse(req.body);
-  await editarPublicacion(req.user!.id_usuario, idPublicacion, input);
+  const archivos = (req.files as Express.Multer.File[] | undefined) ?? [];
+  await editarPublicacion(req.user!.id_usuario, idPublicacion, input, archivos);
   res.status(200).json({ estado: "Pendiente" as const });
 }
