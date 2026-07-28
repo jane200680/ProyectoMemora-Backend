@@ -1,9 +1,12 @@
 import {
   countFeedAprobado,
   crearPublicacion as crearPublicacionRepo,
+  eliminarPublicacion as eliminarPublicacionRepo,
   findFeedAprobado,
+  obtenerAutorPublicacion,
   type FeedFiltros,
 } from "../repositories/publicacion.repository.js";
+import { HttpError } from "../middleware/errorHandler.js";
 import { notificarAdminsPublicacionPendiente } from "./notificacion.service.js";
 import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
@@ -11,6 +14,7 @@ import type { ArchivoMultimediaInput, TipoArchivo } from "../types/publicacion.j
 
 export interface FeedItemDTO {
   id: number;
+  idAutor: number;
   autor: string;
   fotoPerfil: string | null;
   fecha: string;
@@ -47,6 +51,7 @@ export async function obtenerFeed(
 
   const data: FeedItemDTO[] = filas.map((fila) => ({
     id: fila.id_publicacion,
+    idAutor: fila.id_usuario,
     autor: `${fila.nombre} ${fila.apellido}`,
     fotoPerfil: fila.foto_perfil,
     fecha: fila.fecha_publicacion.toISOString(),
@@ -91,4 +96,18 @@ export async function crearPublicacion(
   const idPublicacion = await crearPublicacionRepo(idUsuario, input, archivosSubidos);
   await notificarAdminsPublicacionPendiente(idPublicacion, input.titulo);
   return { id_publicacion: idPublicacion, estado: "Pendiente" as const };
+}
+
+export async function eliminarPublicacion(idUsuario: number, idPublicacion: number): Promise<void> {
+  const publicacion = await obtenerAutorPublicacion(idPublicacion);
+
+  if (!publicacion) {
+    throw new HttpError(404, "Publicación no encontrada");
+  }
+
+  if (publicacion.id_usuario !== idUsuario) {
+    throw new HttpError(403, "No puedes eliminar una publicación que no es tuya");
+  }
+
+  await eliminarPublicacionRepo(idPublicacion);
 }

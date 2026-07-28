@@ -1,6 +1,6 @@
 import type { Request, Response } from "express";
 import { crearPublicacionSchema, feedQuerySchema } from "../schemas/publicacion.schema.js";
-import { crearPublicacion, obtenerFeed } from "../services/publicacion.service.js";
+import { crearPublicacion, eliminarPublicacion, obtenerFeed } from "../services/publicacion.service.js";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   const { pagina, limite, tipo_contenido, categoria, lugar, anio, q } = feedQuerySchema.parse(
@@ -22,4 +22,10 @@ export async function postPublicacion(req: Request, res: Response): Promise<void
   const archivos = (req.files as Express.Multer.File[] | undefined) ?? [];
   const resultado = await crearPublicacion(req.user!.id_usuario, input, archivos);
   res.status(201).json(resultado);
+}
+
+export async function deletePublicacion(req: Request, res: Response): Promise<void> {
+  const idPublicacion = Number(req.params.id);
+  await eliminarPublicacion(req.user!.id_usuario, idPublicacion);
+  res.status(204).send();
 }

@@ -195,6 +195,15 @@ export async function findPendientes(): Promise<PublicacionFeedRow[]> {
   return rows;
 }
 
+export async function eliminarPublicacion(idPublicacion: number): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `DELETE FROM publicacion_cultural WHERE id_publicacion = ?`,
+    [idPublicacion]
+  );
+
+  return result.affectedRows > 0;
+}
+
 export async function actualizarEstadoPublicacion(
   idPublicacion: number,
   input: EstadoPublicacionInput

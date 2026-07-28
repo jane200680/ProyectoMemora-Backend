@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { getComentarios, postComentario } from "../controllers/comentario.controller.js";
-import { getFeed, postPublicacion } from "../controllers/publicacion.controller.js";
+import { deletePublicacion, getFeed, postPublicacion } from "../controllers/publicacion.controller.js";
 import { postReaccion } from "../controllers/reaccion.controller.js";
 import { authenticate, authenticateOpcional } from "../middleware/auth.js";
 import { uploadArchivosMultimedia } from "../middleware/upload.js";
@@ -78,6 +78,31 @@ publicacionRouter.get("/", authenticateOpcional, getFeed);
  *         description: No autenticado
  */
 publicacionRouter.post("/", authenticate, uploadArchivosMultimedia, postPublicacion);
+
+/**
+ * @openapi
+ * /publicaciones/{id}:
+ *   delete:
+ *     tags: [Publicaciones]
+ *     summary: Eliminar una publicación propia
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       204:
+ *         description: Publicación eliminada
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: La publicación no pertenece al usuario
+ *       404:
+ *         description: Publicación no encontrada
+ */
+publicacionRouter.delete("/:id", authenticate, deletePublicacion);
 
 /**
  * @openapi
