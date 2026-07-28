@@ -224,6 +224,28 @@ DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
 
 
+-- -----------------------------------------------------
+-- Table `memora`.`restablecimiento_contrasena`
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `memora`.`restablecimiento_contrasena` (
+  `id_restablecimiento` INT NOT NULL AUTO_INCREMENT,
+  `token_hash` VARCHAR(64) NOT NULL,
+  `usuario_id_usuario` INT NOT NULL,
+  `fecha_expiracion` DATETIME NOT NULL,
+  `usado` TINYINT NOT NULL DEFAULT '0',
+  `fecha_creacion` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_restablecimiento`),
+  UNIQUE INDEX `token_hash` (`token_hash` ASC) VISIBLE,
+  INDEX `fk_restablecimiento_usuario` (`usuario_id_usuario` ASC) VISIBLE,
+  CONSTRAINT `fk_restablecimiento_usuario`
+    FOREIGN KEY (`usuario_id_usuario`)
+    REFERENCES `memora`.`usuario` (`id_usuario`)
+    ON DELETE CASCADE)
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8mb4
+COLLATE = utf8mb4_0900_ai_ci;
+
+
 SET SQL_MODE=@OLD_SQL_MODE;
 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS;
 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS;
