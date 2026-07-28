@@ -1,5 +1,11 @@
 import { Router } from "express";
-import { login, patchPerfil, register } from "../controllers/auth.controller.js";
+import {
+  forgotPassword,
+  login,
+  patchPerfil,
+  register,
+  resetPassword,
+} from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.js";
 import { uploadFotoPerfil } from "../middleware/upload.js";
 
@@ -92,3 +98,48 @@ authRouter.post("/login", login);
  *         description: Nombre de usuario ya en uso
  */
 authRouter.patch("/perfil", authenticate, uploadFotoPerfil, patchPerfil);
+
+/**
+ * @openapi
+ * /auth/forgot-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Solicitar restablecimiento de contraseña
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [correo]
+ *             properties:
+ *               correo: { type: string, format: email }
+ *     responses:
+ *       200:
+ *         description: Instrucciones enviadas (si el correo existe)
+ */
+authRouter.post("/forgot-password", forgotPassword);
+
+/**
+ * @openapi
+ * /auth/reset-password:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Restablecer contraseña con un token válido
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [token, contrasena]
+ *             properties:
+ *               token: { type: string }
+ *               contrasena: { type: string, minLength: 8, maxLength: 100 }
+ *     responses:
+ *       200:
+ *         description: Contraseña actualizada
+ *       400:
+ *         description: Token inválido o expirado
+ */
+authRouter.post("/reset-password", resetPassword);

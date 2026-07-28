@@ -59,6 +59,17 @@ export async function actualizarUltimoAcceso(idUsuario: number): Promise<void> {
   );
 }
 
+export async function actualizarContrasena(
+  idUsuario: number,
+  contrasenaHash: string
+): Promise<void> {
+  await pool.query(
+    `UPDATE autenticacion SET contrasena_hash = ?, fecha_actualizacion = NOW()
+     WHERE usuario_id_usuario = ?`,
+    [contrasenaHash, idUsuario]
+  );
+}
+
 export async function listarUsuarios(): Promise<Usuario[]> {
   const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
     `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil

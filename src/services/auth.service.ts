@@ -1,17 +1,35 @@
 import bcrypt from "bcrypt";
+import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
 import { env } from "../config/env.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import {
+  actualizarContrasena,
   actualizarPerfil as actualizarPerfilRepo,
   actualizarUltimoAcceso,
   buscarPorCorreoConHash,
   buscarPorId,
   crearUsuario,
 } from "../repositories/usuario.repository.js";
-import type { ActualizarPerfilInput, LoginInput, RegisterInput } from "../schemas/auth.schema.js";
+import {
+  buscarRestablecimientoValido,
+  crearRestablecimiento,
+  marcarRestablecimientoUsado,
+} from "../repositories/restablecimiento.repository.js";
+import { enviarCorreoRecuperacion } from "./mail.service.js";
+import type {
+  ActualizarPerfilInput,
+  ForgotPasswordInput,
+  LoginInput,
+  RegisterInput,
+  ResetPasswordInput,
+} from "../schemas/auth.schema.js";
 import type { Usuario } from "../types/usuario.js";
 import { subirArchivoS3 } from "./s3.service.js";
+
+function hashToken(token: string): string {
+  return crypto.createHash("sha256").update(token).digest("hex");
+}
 
 const SALT_ROUNDS = 10;
 
@@ -89,4 +107,30 @@ export async function actualizarPerfil(
   }
 
   return usuario;
+}
+
+export async function solicitarRestablecimiento(input: ForgotPasswordInput): Promise<void> {
+  const usuario = await buscarPorCorreoConHash(input.correo);
+  if (!usuario) {
+    return;
+  }
+
+  const tokenCrudo = crypto.randomBytes(32).toString("hex");
+  const fechaExpiracion = new Date(Date.now() + 60 * 60 * 1000);
+
+  await crearRestablecimiento(usuario.id_usuario, hashToken(tokenCrudo), fechaExpiracion);
+
+  const enlace = `${env.frontendUrl}/reset-password?token=${tokenCrudo}`;
+  await enviarCorreoRecuperacion(usuario.correo, usuario.nombre, enlace);
+}
+
+export async function restablecerContrasena(input: ResetPasswordInput): Promise<void> {
+  const restablecimiento = await buscarRestablecimientoValido(hashToken(input.token));
+  if (!restablecimiento) {
+    throw new HttpError(400, "El enlace no es válido o ya expiró");
+  }
+
+  const contrasenaHash = await bcrypt.hash(input.contrasena, SALT_ROUNDS);
+  await actualizarContrasena(restablecimiento.idUsuario, contrasenaHash);
+  await marcarRestablecimientoUsado(restablecimiento.idRestablecimiento);
 }

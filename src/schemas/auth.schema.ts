@@ -24,3 +24,16 @@ export const actualizarPerfilSchema = z.object({
 });
 
 export type ActualizarPerfilInput = z.infer<typeof actualizarPerfilSchema>;
+
+export const forgotPasswordSchema = z.object({
+  correo: z.string().trim().email(),
+});
+
+export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
+
+export const resetPasswordSchema = z.object({
+  token: z.string().min(1),
+  contrasena: z.string().min(8).max(100),
+});
+
+export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
