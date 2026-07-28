@@ -36,6 +36,17 @@ export const crearPublicacionSchema = z.object({
 
 export type CrearPublicacionInput = z.infer<typeof crearPublicacionSchema>;
 
+export const editarPublicacionSchema = z.object({
+  titulo: z.string().trim().min(3).max(200),
+  descripcion: z.string().trim().min(10),
+  tipo_contenido: z.enum(tiposContenido),
+  anio_contenido: z.coerce.number().int().min(1800).max(anioActual).optional(),
+  categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
+  lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
+});
+
+export type EditarPublicacionInput = z.infer<typeof editarPublicacionSchema>;
+
 export const feedQuerySchema = z.object({
   pagina: z.coerce.number().int().positive().optional().default(1),
   limite: z.coerce.number().int().positive().max(50).optional().default(10),

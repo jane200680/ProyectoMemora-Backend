@@ -1,6 +1,16 @@
 import type { Request, Response } from "express";
-import { crearPublicacionSchema, feedQuerySchema } from "../schemas/publicacion.schema.js";
-import { crearPublicacion, eliminarPublicacion, obtenerFeed } from "../services/publicacion.service.js";
+import {
+  crearPublicacionSchema,
+  editarPublicacionSchema,
+  feedQuerySchema,
+} from "../schemas/publicacion.schema.js";
+import {
+  crearPublicacion,
+  editarPublicacion,
+  eliminarPublicacion,
+  obtenerFeed,
+  obtenerPublicacionPropia,
+} from "../services/publicacion.service.js";
 
 export async function getFeed(req: Request, res: Response): Promise<void> {
   const { pagina, limite, tipo_contenido, categoria, lugar, anio, q } = feedQuerySchema.parse(
@@ -28,4 +38,17 @@ export async function deletePublicacion(req: Request, res: Response): Promise<vo
   const idPublicacion = Number(req.params.id);
   await eliminarPublicacion(req.user!.id_usuario, idPublicacion);
   res.status(204).send();
+}
+
+export async function getPublicacionPropia(req: Request, res: Response): Promise<void> {
+  const idPublicacion = Number(req.params.id);
+  const detalle = await obtenerPublicacionPropia(req.user!.id_usuario, idPublicacion);
+  res.json(detalle);
+}
+
+export async function patchPublicacion(req: Request, res: Response): Promise<void> {
+  const idPublicacion = Number(req.params.id);
+  const input = editarPublicacionSchema.parse(req.body);
+  await editarPublicacion(req.user!.id_usuario, idPublicacion, input);
+  res.status(200).json({ estado: "Pendiente" as const });
 }

@@ -1,15 +1,17 @@
 import {
+  actualizarPublicacion as actualizarPublicacionRepo,
   countFeedAprobado,
   crearPublicacion as crearPublicacionRepo,
   eliminarPublicacion as eliminarPublicacionRepo,
   findFeedAprobado,
   obtenerAutorPublicacion,
+  obtenerDetallePublicacion,
   type FeedFiltros,
 } from "../repositories/publicacion.repository.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import { notificarAdminsPublicacionPendiente } from "./notificacion.service.js";
 import { subirArchivoS3 } from "./s3.service.js";
-import type { CrearPublicacionInput } from "../schemas/publicacion.schema.js";
+import type { CrearPublicacionInput, EditarPublicacionInput } from "../schemas/publicacion.schema.js";
 import type { ArchivoMultimediaInput, TipoArchivo } from "../types/publicacion.js";
 
 export interface FeedItemDTO {
@@ -110,4 +112,38 @@ export async function eliminarPublicacion(idUsuario: number, idPublicacion: numb
   }
 
   await eliminarPublicacionRepo(idPublicacion);
+}
+
+export async function obtenerPublicacionPropia(idUsuario: number, idPublicacion: number) {
+  const detalle = await obtenerDetallePublicacion(idPublicacion);
+
+  if (!detalle) {
+    throw new HttpError(404, "Publicación no encontrada");
+  }
+
+  if (detalle.id_usuario !== idUsuario) {
+    throw new HttpError(403, "No puedes editar una publicación que no es tuya");
+  }
+
+  const { id_usuario: _idUsuario, ...resto } = detalle;
+  return resto;
+}
+
+export async function editarPublicacion(
+  idUsuario: number,
+  idPublicacion: number,
+  input: EditarPublicacionInput
+): Promise<void> {
+  const publicacion = await obtenerAutorPublicacion(idPublicacion);
+
+  if (!publicacion) {
+    throw new HttpError(404, "Publicación no encontrada");
+  }
+
+  if (publicacion.id_usuario !== idUsuario) {
+    throw new HttpError(403, "No puedes editar una publicación que no es tuya");
+  }
+
+  await actualizarPublicacionRepo(idPublicacion, input);
+  await notificarAdminsPublicacionPendiente(idPublicacion, input.titulo);
 }

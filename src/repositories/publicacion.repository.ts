@@ -1,7 +1,11 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoPublicacionInput } from "../schemas/admin.schema.js";
-import type { CrearPublicacionInput, FeedQueryInput } from "../schemas/publicacion.schema.js";
+import type {
+  CrearPublicacionInput,
+  EditarPublicacionInput,
+  FeedQueryInput,
+} from "../schemas/publicacion.schema.js";
 import type { ArchivoMultimediaInput, PublicacionFeedRow } from "../types/publicacion.js";
 
 export type FeedFiltros = Pick<FeedQueryInput, "tipo_contenido" | "categoria" | "lugar" | "anio" | "q">;
@@ -138,6 +142,108 @@ export async function crearPublicacion(
 
     await conexion.commit();
     return idPublicacion;
+  } catch (error) {
+    await conexion.rollback();
+    throw error;
+  } finally {
+    conexion.release();
+  }
+}
+
+export interface DetallePublicacion {
+  id_publicacion: number;
+  id_usuario: number;
+  titulo: string;
+  descripcion: string;
+  tipo_contenido: string;
+  anio_contenido: number | null;
+  categorias: number[];
+  lugares: number[];
+}
+
+export async function obtenerDetallePublicacion(
+  idPublicacion: number
+): Promise<DetallePublicacion | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id_publicacion, id_usuario, titulo, descripcion, tipo_contenido, anio_contenido
+     FROM publicacion_cultural WHERE id_publicacion = ?`,
+    [idPublicacion]
+  );
+
+  const fila = rows[0];
+  if (!fila) return null;
+
+  const [categoriaRows] = await pool.query<RowDataPacket[]>(
+    `SELECT categoria_cultural_id_categoria AS id FROM publicacion_cultural_has_categoria_cultural
+     WHERE publicacion_cultural_id_publicacion = ?`,
+    [idPublicacion]
+  );
+
+  const [lugarRows] = await pool.query<RowDataPacket[]>(
+    `SELECT lugar_cultural_id_lugar AS id FROM publicacion_cultural_has_lugar_cultural
+     WHERE publicacion_cultural_id_publicacion = ?`,
+    [idPublicacion]
+  );
+
+  return {
+    id_publicacion: fila.id_publicacion,
+    id_usuario: fila.id_usuario,
+    titulo: fila.titulo,
+    descripcion: fila.descripcion,
+    tipo_contenido: fila.tipo_contenido,
+    anio_contenido: fila.anio_contenido,
+    categorias: categoriaRows.map((fila) => fila.id as number),
+    lugares: lugarRows.map((fila) => fila.id as number),
+  };
+}
+
+export async function actualizarPublicacion(
+  idPublicacion: number,
+  input: EditarPublicacionInput
+): Promise<void> {
+  const conexion = await pool.getConnection();
+
+  try {
+    await conexion.beginTransaction();
+
+    await conexion.query(
+      `UPDATE publicacion_cultural
+       SET titulo = ?, descripcion = ?, tipo_contenido = ?, anio_contenido = ?, estado = 'Pendiente'
+       WHERE id_publicacion = ?`,
+      [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idPublicacion]
+    );
+
+    await conexion.query(
+      `DELETE FROM publicacion_cultural_has_categoria_cultural
+       WHERE publicacion_cultural_id_publicacion = ?`,
+      [idPublicacion]
+    );
+
+    if (input.categorias.length) {
+      await conexion.query(
+        `INSERT INTO publicacion_cultural_has_categoria_cultural
+           (publicacion_cultural_id_publicacion, categoria_cultural_id_categoria)
+         VALUES ?`,
+        [input.categorias.map((idCategoria) => [idPublicacion, idCategoria])]
+      );
+    }
+
+    await conexion.query(
+      `DELETE FROM publicacion_cultural_has_lugar_cultural
+       WHERE publicacion_cultural_id_publicacion = ?`,
+      [idPublicacion]
+    );
+
+    if (input.lugares.length) {
+      await conexion.query(
+        `INSERT INTO publicacion_cultural_has_lugar_cultural
+           (publicacion_cultural_id_publicacion, lugar_cultural_id_lugar)
+         VALUES ?`,
+        [input.lugares.map((idLugar) => [idPublicacion, idLugar])]
+      );
+    }
+
+    await conexion.commit();
   } catch (error) {
     await conexion.rollback();
     throw error;

@@ -1,6 +1,12 @@
 import { Router } from "express";
 import { getComentarios, postComentario } from "../controllers/comentario.controller.js";
-import { deletePublicacion, getFeed, postPublicacion } from "../controllers/publicacion.controller.js";
+import {
+  deletePublicacion,
+  getFeed,
+  getPublicacionPropia,
+  patchPublicacion,
+  postPublicacion,
+} from "../controllers/publicacion.controller.js";
 import { postReaccion } from "../controllers/reaccion.controller.js";
 import { authenticate, authenticateOpcional } from "../middleware/auth.js";
 import { uploadArchivosMultimedia } from "../middleware/upload.js";
@@ -103,6 +109,62 @@ publicacionRouter.post("/", authenticate, uploadArchivosMultimedia, postPublicac
  *         description: Publicación no encontrada
  */
 publicacionRouter.delete("/:id", authenticate, deletePublicacion);
+
+/**
+ * @openapi
+ * /publicaciones/{id}/editar:
+ *   get:
+ *     tags: [Publicaciones]
+ *     summary: Obtener los datos propios de una publicación para editarla
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Datos de la publicación
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: La publicación no pertenece al usuario
+ *       404:
+ *         description: Publicación no encontrada
+ */
+publicacionRouter.get("/:id/editar", authenticate, getPublicacionPropia);
+
+/**
+ * @openapi
+ * /publicaciones/{id}:
+ *   patch:
+ *     tags: [Publicaciones]
+ *     summary: Editar una publicación propia (vuelve a quedar Pendiente)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CrearPublicacionInput'
+ *     responses:
+ *       200:
+ *         description: Publicación actualizada, vuelve a estado Pendiente
+ *       401:
+ *         description: No autenticado
+ *       403:
+ *         description: La publicación no pertenece al usuario
+ *       404:
+ *         description: Publicación no encontrada
+ */
+publicacionRouter.patch("/:id", authenticate, patchPublicacion);
 
 /**
  * @openapi
