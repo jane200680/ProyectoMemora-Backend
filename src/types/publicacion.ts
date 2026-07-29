@@ -2,7 +2,6 @@ export type TipoContenido =
   | "Relato escrito"
   | "Fotografía"
   | "Video"
-  | "Audio"
   | "Documento histórico"
   | "Receta"
   | "Testimonio comunitario"
@@ -31,7 +30,7 @@ export interface FeedQuery {
   limite: number;
 }
 
-export type TipoArchivo = "Imagen" | "Video" | "Audio" | "Documento";
+export type TipoArchivo = "Imagen" | "Video" | "Documento";
 
 export interface ArchivoMultimediaInput {
   tipo_archivo: TipoArchivo;

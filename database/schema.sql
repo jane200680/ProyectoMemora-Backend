@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS `memora`.`publicacion_cultural` (
   `titulo` VARCHAR(200) NOT NULL,
   `descripcion` TEXT NOT NULL,
   `fecha_publicacion` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
-  `tipo_contenido` ENUM('Relato escrito', 'Fotografía', 'Video', 'Audio', 'Documento histórico', 'Receta', 'Testimonio comunitario', 'Evento cultural', 'Lugar recomendado') NOT NULL,
+  `tipo_contenido` ENUM('Relato escrito', 'Fotografía', 'Video', 'Documento histórico', 'Receta', 'Testimonio comunitario', 'Evento cultural', 'Lugar recomendado') NOT NULL,
   `estado` ENUM('Pendiente', 'Aprobada', 'Rechazada') NOT NULL DEFAULT 'Pendiente',
   `id_usuario` INT NOT NULL,
   `anio_contenido` YEAR NULL DEFAULT NULL,
@@ -59,7 +59,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `memora`.`archivo_multimedia` (
   `id_archivo` INT NOT NULL AUTO_INCREMENT,
-  `tipo_archivo` ENUM('Imagen', 'Video', 'Audio', 'Documento') NOT NULL,
+  `tipo_archivo` ENUM('Imagen', 'Video', 'Documento') NOT NULL,
   `url_archivo` VARCHAR(255) NOT NULL,
   `descripcion` TEXT NULL DEFAULT NULL,
   `id_publicacion` INT NOT NULL,

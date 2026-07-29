@@ -8,9 +8,6 @@ const TIPOS_PERMITIDOS = [
   "image/gif",
   "video/mp4",
   "video/webm",
-  "audio/mpeg",
-  "audio/mp4",
-  "audio/wav",
   "application/pdf",
 ];
 

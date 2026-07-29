@@ -79,7 +79,6 @@ export async function obtenerFeed(
 function tipoArchivoDesdeMime(mimetype: string): TipoArchivo {
   if (mimetype.startsWith("image/")) return "Imagen";
   if (mimetype.startsWith("video/")) return "Video";
-  if (mimetype.startsWith("audio/")) return "Audio";
   return "Documento";
 }
 

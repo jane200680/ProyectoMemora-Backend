@@ -91,7 +91,6 @@ const options: swaggerJsdoc.Options = {
                 "Relato escrito",
                 "Fotografía",
                 "Video",
-                "Audio",
                 "Documento histórico",
                 "Receta",
                 "Testimonio comunitario",

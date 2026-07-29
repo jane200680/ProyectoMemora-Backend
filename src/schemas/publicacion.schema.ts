@@ -4,7 +4,6 @@ export const tiposContenido = [
   "Relato escrito",
   "Fotografía",
   "Video",
-  "Audio",
   "Documento histórico",
   "Receta",
   "Testimonio comunitario",
