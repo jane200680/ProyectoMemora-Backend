@@ -10,7 +10,6 @@ const soloLetrasSchema = (min: number, max: number) =>
     .regex(SOLO_LETRAS, "Solo se permiten letras y espacios");
 
 export const registerSchema = z.object({
-  nombre_usuario: z.string().trim().min(3).max(100),
   nombre: soloLetrasSchema(1, 100),
   apellido: soloLetrasSchema(1, 150),
   correo: z.string().trim().email().max(255),

@@ -34,9 +34,8 @@ const options: swaggerJsdoc.Options = {
         },
         RegisterInput: {
           type: "object",
-          required: ["nombre_usuario", "nombre", "apellido", "correo", "contrasena"],
+          required: ["nombre", "apellido", "correo", "contrasena"],
           properties: {
-            nombre_usuario: { type: "string", minLength: 3, maxLength: 100 },
             nombre: { type: "string", minLength: 1, maxLength: 100 },
             apellido: { type: "string", minLength: 1, maxLength: 150 },
             correo: { type: "string", format: "email", maxLength: 255 },

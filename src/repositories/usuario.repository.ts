@@ -1,12 +1,19 @@
 import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoUsuarioInput } from "../schemas/admin.schema.js";
-import type { ActualizarPerfilInput, RegisterInput } from "../schemas/auth.schema.js";
+import type { ActualizarPerfilInput } from "../schemas/auth.schema.js";
 import type { Usuario } from "../types/usuario.js";
 import type { UsuarioConHash } from "../types/usuario.js";
 
+export interface NuevoUsuarioInput {
+  nombre_usuario: string;
+  nombre: string;
+  apellido: string;
+  correo: string;
+}
+
 export async function crearUsuario(
-  input: RegisterInput,
+  input: NuevoUsuarioInput,
   contrasenaHash: string
 ): Promise<number> {
   const connection = await pool.getConnection();

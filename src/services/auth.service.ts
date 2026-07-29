@@ -37,22 +37,54 @@ interface MysqlError {
   code?: string;
 }
 
+interface MysqlErrorConDetalle extends MysqlError {
+  sqlMessage?: string;
+}
+
 function esErrorDeDuplicado(error: unknown): boolean {
   return typeof error === "object" && error !== null && (error as MysqlError).code === "ER_DUP_ENTRY";
 }
 
+function esConflictoDeNombreUsuario(error: unknown): boolean {
+  if (!esErrorDeDuplicado(error)) return false;
+  return Boolean((error as MysqlErrorConDetalle).sqlMessage?.includes("nombre_usuario"));
+}
+
+function generarNombreUsuario(correo: string): string {
+  const base =
+    correo
+      .split("@")[0]
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "")
+      .slice(0, 20) || "usuario";
+  const sufijo = Math.floor(1000 + Math.random() * 9000);
+  return `${base}${sufijo}`;
+}
+
+const INTENTOS_NOMBRE_USUARIO = 5;
+
 export async function registrar(input: RegisterInput): Promise<{ id_usuario: number }> {
   const contrasenaHash = await bcrypt.hash(input.contrasena, SALT_ROUNDS);
 
-  try {
-    const idUsuario = await crearUsuario(input, contrasenaHash);
-    return { id_usuario: idUsuario };
-  } catch (error) {
-    if (esErrorDeDuplicado(error)) {
-      throw new HttpError(409, "El correo o nombre de usuario ya está registrado");
+  for (let intento = 0; intento < INTENTOS_NOMBRE_USUARIO; intento++) {
+    const nombreUsuario = generarNombreUsuario(input.correo);
+
+    try {
+      const idUsuario = await crearUsuario(
+        { nombre_usuario: nombreUsuario, nombre: input.nombre, apellido: input.apellido, correo: input.correo },
+        contrasenaHash
+      );
+      return { id_usuario: idUsuario };
+    } catch (error) {
+      if (esConflictoDeNombreUsuario(error)) continue;
+      if (esErrorDeDuplicado(error)) {
+        throw new HttpError(409, "Ese correo ya está registrado");
+      }
+      throw error;
     }
-    throw error;
   }
+
+  throw new HttpError(500, "No se pudo completar el registro. Intenta de nuevo.");
 }
 
 export async function iniciarSesion(input: LoginInput): Promise<{ token: string; usuario: Usuario }> {

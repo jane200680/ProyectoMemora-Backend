@@ -16,6 +16,14 @@ import {
 } from "./middleware/swaggerAuth.js";
 import { router } from "./routes/index.js";
 
+process.on("unhandledRejection", (reason) => {
+  console.error("unhandledRejection:", reason);
+});
+
+process.on("uncaughtException", (error) => {
+  console.error("uncaughtException:", error);
+});
+
 function construirOrigenesPermitidos(frontendUrl: string): string[] {
   try {
     const url = new URL(frontendUrl);
