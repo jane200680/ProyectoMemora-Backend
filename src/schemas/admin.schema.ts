@@ -4,9 +4,15 @@ export const estadoUsuarioSchema = z.object({
   estado: z.enum(["Activo", "Inactivo", "Suspendido"]),
 });
 
-export const estadoPublicacionSchema = z.object({
-  estado: z.enum(["Aprobada", "Rechazada"]),
-});
+export const estadoPublicacionSchema = z
+  .object({
+    estado: z.enum(["Aprobada", "Rechazada"]),
+    motivo: z.string().trim().min(3).max(500).optional(),
+  })
+  .refine((data) => data.estado !== "Rechazada" || Boolean(data.motivo), {
+    message: "Debes indicar el motivo del rechazo",
+    path: ["motivo"],
+  });
 
 export const categoriaSchema = z.object({
   nombre_categoria: z.string().trim().min(2).max(100),

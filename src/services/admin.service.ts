@@ -43,5 +43,5 @@ export async function actualizarEstadoPublicacion(
     throw new HttpError(404, "Publicación no encontrada");
   }
 
-  await notificarCambioEstadoPublicacion(idPublicacion, input.estado);
+  await notificarCambioEstadoPublicacion(idPublicacion, input.estado, input.motivo);
 }

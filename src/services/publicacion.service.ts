@@ -12,7 +12,17 @@ import { HttpError } from "../middleware/errorHandler.js";
 import { notificarAdminsPublicacionPendiente } from "./notificacion.service.js";
 import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput, EditarPublicacionInput } from "../schemas/publicacion.schema.js";
-import type { ArchivoMultimediaInput, TipoArchivo } from "../types/publicacion.js";
+import type { ArchivoMultimediaInput } from "../types/publicacion.js";
+import {
+  cumpleRequisitoArchivo,
+  mensajeRequisitoArchivo,
+  tipoArchivoDesdeMime,
+} from "../utils/requisitosArchivo.js";
+
+export interface ArchivoFeedDTO {
+  tipo: "Imagen" | "Video" | "Documento";
+  url: string;
+}
 
 export interface FeedItemDTO {
   id: number;
@@ -25,9 +35,18 @@ export interface FeedItemDTO {
   descripcion: string;
   imagen: string | null;
   imagenes: string[];
+  archivos: ArchivoFeedDTO[];
   comentarios: number;
   reacciones: number;
   reacciono: boolean;
+}
+
+function parsearArchivos(raw: string | null): ArchivoFeedDTO[] {
+  if (!raw) return [];
+  return raw.split("||").map((entrada) => {
+    const [tipo, ...resto] = entrada.split("::");
+    return { tipo: tipo as ArchivoFeedDTO["tipo"], url: resto.join("::") };
+  });
 }
 
 export interface FeedDTO {
@@ -62,6 +81,7 @@ export async function obtenerFeed(
     descripcion: fila.descripcion,
     imagen: fila.imagen,
     imagenes: fila.imagenes ? fila.imagenes.split("||") : [],
+    archivos: parsearArchivos(fila.archivos_raw),
     comentarios: fila.total_comentarios,
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),
@@ -76,17 +96,16 @@ export async function obtenerFeed(
   };
 }
 
-function tipoArchivoDesdeMime(mimetype: string): TipoArchivo {
-  if (mimetype.startsWith("image/")) return "Imagen";
-  if (mimetype.startsWith("video/")) return "Video";
-  return "Documento";
-}
-
 export async function crearPublicacion(
   idUsuario: number,
   input: CrearPublicacionInput,
   archivos: Express.Multer.File[] = []
 ) {
+  const tiposArchivo = archivos.map((archivo) => tipoArchivoDesdeMime(archivo.mimetype));
+  if (!cumpleRequisitoArchivo(input.tipo_contenido, tiposArchivo)) {
+    throw new HttpError(400, mensajeRequisitoArchivo(input.tipo_contenido)!);
+  }
+
   const archivosSubidos: ArchivoMultimediaInput[] = await Promise.all(
     archivos.map(async (archivo) => ({
       tipo_archivo: tipoArchivoDesdeMime(archivo.mimetype),
@@ -134,14 +153,23 @@ export async function editarPublicacion(
   input: EditarPublicacionInput,
   archivos: Express.Multer.File[] = []
 ): Promise<void> {
-  const publicacion = await obtenerAutorPublicacion(idPublicacion);
+  const detalle = await obtenerDetallePublicacion(idPublicacion);
 
-  if (!publicacion) {
+  if (!detalle) {
     throw new HttpError(404, "Publicación no encontrada");
   }
 
-  if (publicacion.id_usuario !== idUsuario) {
+  if (detalle.id_usuario !== idUsuario) {
     throw new HttpError(403, "No puedes editar una publicación que no es tuya");
+  }
+
+  const tiposArchivoExistentes = detalle.archivos
+    .filter((archivo) => !input.archivos_eliminar.includes(archivo.id_archivo))
+    .map((archivo) => archivo.tipo_archivo);
+  const tiposArchivoNuevos = archivos.map((archivo) => tipoArchivoDesdeMime(archivo.mimetype));
+
+  if (!cumpleRequisitoArchivo(input.tipo_contenido, [...tiposArchivoExistentes, ...tiposArchivoNuevos])) {
+    throw new HttpError(400, mensajeRequisitoArchivo(input.tipo_contenido)!);
   }
 
   const archivosSubidos: ArchivoMultimediaInput[] = await Promise.all(

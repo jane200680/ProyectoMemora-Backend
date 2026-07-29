@@ -51,7 +51,8 @@ export async function marcarTodasLasNotificacionesLeidas(idUsuario: number) {
 
 export async function notificarCambioEstadoPublicacion(
   idPublicacion: number,
-  estado: "Aprobada" | "Rechazada"
+  estado: "Aprobada" | "Rechazada",
+  motivo?: string
 ) {
   const publicacion = await obtenerAutorPublicacion(idPublicacion);
   if (!publicacion) return;
@@ -59,7 +60,7 @@ export async function notificarCambioEstadoPublicacion(
   const mensaje =
     estado === "Aprobada"
       ? `Tu publicación "${publicacion.titulo}" fue aprobada.`
-      : `Tu publicación "${publicacion.titulo}" fue rechazada.`;
+      : `Tu publicación "${publicacion.titulo}" fue rechazada. Motivo: ${motivo}`;
 
   await crearNotificacion(publicacion.id_usuario, idPublicacion, mensaje);
 }
