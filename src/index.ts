@@ -16,10 +16,22 @@ import {
 } from "./middleware/swaggerAuth.js";
 import { router } from "./routes/index.js";
 
+function construirOrigenesPermitidos(frontendUrl: string): string[] {
+  try {
+    const url = new URL(frontendUrl);
+    const conWww = url.hostname.startsWith("www.") ? url.hostname : `www.${url.hostname}`;
+    const sinWww = url.hostname.replace(/^www\./, "");
+    return [...new Set([`${url.protocol}//${conWww}`, `${url.protocol}//${sinWww}`])];
+  } catch {
+    return [frontendUrl];
+  }
+}
+
 const app = express();
+const origenesPermitidos = construirOrigenesPermitidos(env.frontendUrl);
 
 app.use(helmet());
-app.use(cors({ origin: env.frontendUrl, credentials: true }));
+app.use(cors({ origin: origenesPermitidos, credentials: true }));
 app.use(express.json());
 app.use(morgan(env.nodeEnv === "development" ? "dev" : "combined"));
 
