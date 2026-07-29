@@ -9,11 +9,20 @@ const soloLetrasSchema = (min: number, max: number) =>
     .max(max)
     .regex(SOLO_LETRAS, "Solo se permiten letras y espacios");
 
+const contrasenaSchema = z
+  .string()
+  .min(8, "La contraseña debe tener al menos 8 caracteres")
+  .max(100, "La contraseña es demasiado larga")
+  .regex(/[A-Z]/, "La contraseña debe incluir al menos una letra mayúscula")
+  .regex(/[a-z]/, "La contraseña debe incluir al menos una letra minúscula")
+  .regex(/[0-9]/, "La contraseña debe incluir al menos un número")
+  .regex(/[^A-Za-z0-9]/, "La contraseña debe incluir al menos un carácter especial");
+
 export const registerSchema = z.object({
   nombre: soloLetrasSchema(1, 100),
   apellido: soloLetrasSchema(1, 150),
   correo: z.string().trim().email().max(255),
-  contrasena: z.string().min(8).max(100),
+  contrasena: contrasenaSchema,
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -41,7 +50,7 @@ export type ForgotPasswordInput = z.infer<typeof forgotPasswordSchema>;
 
 export const resetPasswordSchema = z.object({
   token: z.string().min(1),
-  contrasena: z.string().min(8).max(100),
+  contrasena: contrasenaSchema,
 });
 
 export type ResetPasswordInput = z.infer<typeof resetPasswordSchema>;
