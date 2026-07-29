@@ -12,7 +12,6 @@ const soloLetrasSchema = (min: number, max: number) =>
 const contrasenaSchema = z
   .string()
   .min(8, "La contraseña debe tener al menos 8 caracteres")
-  .max(100, "La contraseña es demasiado larga")
   .regex(/[A-Z]/, "La contraseña debe incluir al menos una letra mayúscula")
   .regex(/[a-z]/, "La contraseña debe incluir al menos una letra minúscula")
   .regex(/[0-9]/, "La contraseña debe incluir al menos un número")
