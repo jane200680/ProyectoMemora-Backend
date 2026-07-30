@@ -141,7 +141,7 @@ const options: swaggerJsdoc.Options = {
             idPublicacion: { type: "integer" },
             tipo: {
               type: "string",
-              enum: ["comentario", "reaccion", "estado", "otro"],
+              enum: ["comentario", "reaccion", "estado", "pendiente", "otro"],
             },
           },
         },

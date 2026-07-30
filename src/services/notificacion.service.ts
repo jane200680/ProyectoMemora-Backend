@@ -22,7 +22,7 @@ function avisarPorCorreo(correo: string, nombre: string, mensaje: string, enlace
   });
 }
 
-export type TipoNotificacion = "comentario" | "reaccion" | "estado" | "otro";
+export type TipoNotificacion = "comentario" | "reaccion" | "estado" | "pendiente" | "otro";
 
 export interface NotificacionDTO {
   id: number;
@@ -37,6 +37,7 @@ function inferirTipoNotificacion(mensaje: string): TipoNotificacion {
   if (mensaje.includes("comentó tu publicación")) return "comentario";
   if (mensaje.includes("reaccionó a tu publicación")) return "reaccion";
   if (mensaje.includes("fue aprobada") || mensaje.includes("fue rechazada")) return "estado";
+  if (mensaje.includes("pendiente de revisión")) return "pendiente";
   return "otro";
 }
 
