@@ -3,6 +3,7 @@ import { getComentarios, postComentario } from "../controllers/comentario.contro
 import {
   deletePublicacion,
   getFeed,
+  getPublicacionPorId,
   getPublicacionPropia,
   patchPublicacion,
   postPublicacion,
@@ -84,6 +85,29 @@ publicacionRouter.get("/", authenticateOpcional, getFeed);
  *         description: No autenticado
  */
 publicacionRouter.post("/", authenticate, uploadArchivosMultimedia, postPublicacion);
+
+/**
+ * @openapi
+ * /publicaciones/{id}:
+ *   get:
+ *     tags: [Publicaciones]
+ *     summary: Obtener una publicación aprobada por id (para enlaces directos, p. ej. desde notificaciones)
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       200:
+ *         description: Publicación
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Publicacion'
+ *       404:
+ *         description: Publicación no encontrada
+ */
+publicacionRouter.get("/:id", authenticateOpcional, getPublicacionPorId);
 
 /**
  * @openapi

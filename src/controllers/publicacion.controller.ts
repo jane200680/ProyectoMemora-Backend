@@ -9,6 +9,7 @@ import {
   editarPublicacion,
   eliminarPublicacion,
   obtenerFeed,
+  obtenerPublicacionPorId,
   obtenerPublicacionPropia,
 } from "../services/publicacion.service.js";
 
@@ -25,6 +26,12 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
     q,
   });
   res.json(feed);
+}
+
+export async function getPublicacionPorId(req: Request, res: Response): Promise<void> {
+  const idPublicacion = Number(req.params.id);
+  const publicacion = await obtenerPublicacionPorId(idPublicacion, req.user?.id_usuario ?? null);
+  res.json(publicacion);
 }
 
 export async function postPublicacion(req: Request, res: Response): Promise<void> {

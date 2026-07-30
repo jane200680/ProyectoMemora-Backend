@@ -4,6 +4,7 @@ import {
   crearPublicacion as crearPublicacionRepo,
   eliminarPublicacion as eliminarPublicacionRepo,
   findFeedAprobado,
+  findPublicacionAprobadaPorId,
   obtenerAutorPublicacion,
   obtenerDetallePublicacion,
   type FeedFiltros,
@@ -12,7 +13,7 @@ import { HttpError } from "../middleware/errorHandler.js";
 import { notificarAdminsPublicacionPendiente } from "./notificacion.service.js";
 import { subirArchivoS3 } from "./s3.service.js";
 import type { CrearPublicacionInput, EditarPublicacionInput } from "../schemas/publicacion.schema.js";
-import type { ArchivoMultimediaInput } from "../types/publicacion.js";
+import type { ArchivoMultimediaInput, PublicacionFeedRow } from "../types/publicacion.js";
 import {
   cumpleRequisitoArchivo,
   mensajeRequisitoArchivo,
@@ -57,20 +58,8 @@ export interface FeedDTO {
   totalPaginas: number;
 }
 
-export async function obtenerFeed(
-  pagina: number,
-  limite: number,
-  idUsuarioActual: number | null,
-  filtros: FeedFiltros = {}
-): Promise<FeedDTO> {
-  const offset = (pagina - 1) * limite;
-
-  const [filas, total] = await Promise.all([
-    findFeedAprobado(limite, offset, idUsuarioActual, filtros),
-    countFeedAprobado(filtros),
-  ]);
-
-  const data: FeedItemDTO[] = filas.map((fila) => ({
+function mapFilaAFeedItem(fila: PublicacionFeedRow): FeedItemDTO {
+  return {
     id: fila.id_publicacion,
     idAutor: fila.id_usuario,
     autor: `${fila.nombre} ${fila.apellido}`,
@@ -85,15 +74,41 @@ export async function obtenerFeed(
     comentarios: fila.total_comentarios,
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),
-  }));
+  };
+}
+
+export async function obtenerFeed(
+  pagina: number,
+  limite: number,
+  idUsuarioActual: number | null,
+  filtros: FeedFiltros = {}
+): Promise<FeedDTO> {
+  const offset = (pagina - 1) * limite;
+
+  const [filas, total] = await Promise.all([
+    findFeedAprobado(limite, offset, idUsuarioActual, filtros),
+    countFeedAprobado(filtros),
+  ]);
 
   return {
-    data,
+    data: filas.map(mapFilaAFeedItem),
     pagina,
     limite,
     total,
     totalPaginas: Math.max(1, Math.ceil(total / limite)),
   };
+}
+
+export async function obtenerPublicacionPorId(
+  idPublicacion: number,
+  idUsuarioActual: number | null
+): Promise<FeedItemDTO> {
+  const fila = await findPublicacionAprobadaPorId(idPublicacion, idUsuarioActual);
+  if (!fila) {
+    throw new HttpError(404, "Publicación no encontrada");
+  }
+
+  return mapFilaAFeedItem(fila);
 }
 
 export async function crearPublicacion(

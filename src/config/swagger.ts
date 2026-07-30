@@ -134,10 +134,15 @@ const options: swaggerJsdoc.Options = {
         Notificacion: {
           type: "object",
           properties: {
-            id_notificacion: { type: "integer" },
+            id: { type: "integer" },
             mensaje: { type: "string" },
             leida: { type: "boolean" },
-            fecha_creacion: { type: "string", format: "date-time" },
+            fecha: { type: "string", format: "date-time" },
+            idPublicacion: { type: "integer" },
+            tipo: {
+              type: "string",
+              enum: ["comentario", "reaccion", "estado", "otro"],
+            },
           },
         },
       },

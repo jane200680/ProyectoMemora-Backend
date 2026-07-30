@@ -103,6 +103,48 @@ export async function findFeedAprobado(
   return rows;
 }
 
+export async function findPublicacionAprobadaPorId(
+  idPublicacion: number,
+  idUsuarioActual: number | null
+): Promise<PublicacionFeedRow | null> {
+  const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
+    `SELECT
+       p.id_publicacion,
+       p.titulo,
+       p.descripcion,
+       p.tipo_contenido,
+       p.fecha_publicacion,
+       u.id_usuario,
+       u.nombre,
+       u.apellido,
+       u.foto_perfil,
+       (SELECT am.url_archivo FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion
+         ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
+       (SELECT GROUP_CONCAT(am.url_archivo ORDER BY am.id_archivo ASC SEPARATOR '||')
+         FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion AND am.tipo_archivo = 'Imagen') AS imagenes,
+       (SELECT GROUP_CONCAT(CONCAT(am.tipo_archivo, '::', am.url_archivo) ORDER BY am.id_archivo ASC SEPARATOR '||')
+         FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion) AS archivos_raw,
+       (SELECT COUNT(*) FROM comentario c
+         WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios,
+       (SELECT COUNT(*) FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion) AS total_reacciones,
+       EXISTS(
+         SELECT 1 FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion AND r.id_usuario = ?
+       ) AS reacciono
+     FROM publicacion_cultural p
+     JOIN usuario u ON u.id_usuario = p.id_usuario
+     WHERE p.estado = 'Aprobada' AND p.id_publicacion = ?
+     LIMIT 1`,
+    [idUsuarioActual, idPublicacion]
+  );
+
+  return rows[0] ?? null;
+}
+
 export async function crearPublicacion(
   idUsuario: number,
   input: CrearPublicacionInput,

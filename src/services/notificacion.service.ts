@@ -22,12 +22,22 @@ function avisarPorCorreo(correo: string, nombre: string, mensaje: string, enlace
   });
 }
 
+export type TipoNotificacion = "comentario" | "reaccion" | "estado" | "otro";
+
 export interface NotificacionDTO {
   id: number;
   mensaje: string;
   fecha: string;
   leida: boolean;
   idPublicacion: number;
+  tipo: TipoNotificacion;
+}
+
+function inferirTipoNotificacion(mensaje: string): TipoNotificacion {
+  if (mensaje.includes("comentó tu publicación")) return "comentario";
+  if (mensaje.includes("reaccionó a tu publicación")) return "reaccion";
+  if (mensaje.includes("fue aprobada") || mensaje.includes("fue rechazada")) return "estado";
+  return "otro";
 }
 
 export async function listarNotificaciones(idUsuario: number) {
@@ -42,6 +52,7 @@ export async function listarNotificaciones(idUsuario: number) {
     fecha: fila.fecha_notificacion.toISOString(),
     leida: Boolean(fila.leida),
     idPublicacion: fila.publicacion_cultural_id_publicacion,
+    tipo: inferirTipoNotificacion(fila.mensaje),
   }));
 
   return { data, noLeidas };
