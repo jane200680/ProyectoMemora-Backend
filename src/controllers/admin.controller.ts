@@ -6,6 +6,7 @@ import {
   listarPublicacionesPendientes,
   listarUsuarios,
 } from "../services/admin.service.js";
+import { parseIdParam } from "../utils/parseId.js";
 
 export async function getUsuarios(req: Request, res: Response): Promise<void> {
   const usuarios = await listarUsuarios();
@@ -14,7 +15,7 @@ export async function getUsuarios(req: Request, res: Response): Promise<void> {
 
 export async function patchEstadoUsuario(req: Request, res: Response): Promise<void> {
   const input = estadoUsuarioSchema.parse(req.body);
-  await actualizarEstadoUsuario(Number(req.params.id), input);
+  await actualizarEstadoUsuario(parseIdParam(req.params.id), input);
   res.json({ ok: true });
 }
 
@@ -25,6 +26,6 @@ export async function getPublicacionesPendientes(req: Request, res: Response): P
 
 export async function patchEstadoPublicacion(req: Request, res: Response): Promise<void> {
   const input = estadoPublicacionSchema.parse(req.body);
-  await actualizarEstadoPublicacion(Number(req.params.id), input);
+  await actualizarEstadoPublicacion(parseIdParam(req.params.id), input);
   res.json({ ok: true });
 }

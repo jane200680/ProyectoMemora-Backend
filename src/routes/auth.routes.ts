@@ -7,6 +7,7 @@ import {
   resetPassword,
 } from "../controllers/auth.controller.js";
 import { authenticate } from "../middleware/auth.js";
+import { authRateLimiter } from "../middleware/rateLimiter.js";
 import { uploadFotoPerfil } from "../middleware/upload.js";
 
 export const authRouter = Router();
@@ -39,7 +40,7 @@ export const authRouter = Router();
  *       409:
  *         description: Correo o nombre de usuario ya registrado
  */
-authRouter.post("/register", register);
+authRouter.post("/register", authRateLimiter, register);
 
 /**
  * @openapi
@@ -67,7 +68,7 @@ authRouter.post("/register", register);
  *             schema:
  *               $ref: '#/components/schemas/Error'
  */
-authRouter.post("/login", login);
+authRouter.post("/login", authRateLimiter, login);
 
 /**
  * @openapi
@@ -118,7 +119,7 @@ authRouter.patch("/perfil", authenticate, uploadFotoPerfil, patchPerfil);
  *       200:
  *         description: Instrucciones enviadas (si el correo existe)
  */
-authRouter.post("/forgot-password", forgotPassword);
+authRouter.post("/forgot-password", authRateLimiter, forgotPassword);
 
 /**
  * @openapi
@@ -142,4 +143,4 @@ authRouter.post("/forgot-password", forgotPassword);
  *       400:
  *         description: Token inválido o expirado
  */
-authRouter.post("/reset-password", resetPassword);
+authRouter.post("/reset-password", authRateLimiter, resetPassword);

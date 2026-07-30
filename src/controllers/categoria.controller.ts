@@ -6,6 +6,7 @@ import {
   eliminarCategoria,
   listarCategorias,
 } from "../services/categoria.service.js";
+import { parseIdParam } from "../utils/parseId.js";
 
 export async function getCategorias(req: Request, res: Response): Promise<void> {
   const categorias = await listarCategorias();
@@ -20,11 +21,11 @@ export async function postCategoria(req: Request, res: Response): Promise<void> 
 
 export async function putCategoria(req: Request, res: Response): Promise<void> {
   const input = categoriaSchema.parse(req.body);
-  await actualizarCategoria(Number(req.params.id), input);
+  await actualizarCategoria(parseIdParam(req.params.id), input);
   res.json({ ok: true });
 }
 
 export async function deleteCategoria(req: Request, res: Response): Promise<void> {
-  await eliminarCategoria(Number(req.params.id));
+  await eliminarCategoria(parseIdParam(req.params.id));
   res.json({ ok: true });
 }

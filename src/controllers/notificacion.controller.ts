@@ -4,6 +4,7 @@ import {
   marcarNotificacionLeida,
   marcarTodasLasNotificacionesLeidas,
 } from "../services/notificacion.service.js";
+import { parseIdParam } from "../utils/parseId.js";
 
 export async function getNotificaciones(req: Request, res: Response): Promise<void> {
   const resultado = await listarNotificaciones(req.user!.id_usuario);
@@ -11,7 +12,7 @@ export async function getNotificaciones(req: Request, res: Response): Promise<vo
 }
 
 export async function patchNotificacionLeida(req: Request, res: Response): Promise<void> {
-  await marcarNotificacionLeida(req.user!.id_usuario, Number(req.params.id));
+  await marcarNotificacionLeida(req.user!.id_usuario, parseIdParam(req.params.id));
   res.json({ ok: true });
 }
 
