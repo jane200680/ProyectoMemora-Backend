@@ -1,0 +1,44 @@
+# Referencia de /etc/nginx/sites-available/memora con el fix de Cloudflare
+# aplicado. Comparado con el bloque de 10GuiaSSL.md, lo único nuevo es la
+# línea `include /etc/nginx/conf.d/cloudflare.conf;` dentro de cada `server`
+# (ese archivo lo genera cloudflare-nginx.sh).
+#
+# Si certbot ya modificó tu archivo real (agregó el bloque 443 y el
+# redirect 80->443), no lo reemplaces con este: solo agrega la línea
+# `include` dentro de CADA bloque `server { ... }` que tengas (el de 80 y
+# el de 443).
+
+server {
+    listen 80;
+    server_name tu-dominio.com;
+
+    include /etc/nginx/conf.d/cloudflare.conf;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+# Bloque 443 que agrega certbot tras correr `certbot --nginx`:
+#
+# server {
+#     listen 443 ssl;
+#     server_name tu-dominio.com;
+#
+#     include /etc/nginx/conf.d/cloudflare.conf;
+#
+#     ssl_certificate     /etc/letsencrypt/live/tu-dominio.com/fullchain.pem;
+#     ssl_certificate_key /etc/letsencrypt/live/tu-dominio.com/privkey.pem;
+#
+#     location / {
+#         proxy_pass http://127.0.0.1:3000;
+#         proxy_set_header Host $host;
+#         proxy_set_header X-Real-IP $remote_addr;
+#         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+#         proxy_set_header X-Forwarded-Proto $scheme;
+#     }
+# }

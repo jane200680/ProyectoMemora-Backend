@@ -38,12 +38,16 @@ function construirOrigenesPermitidos(frontendUrl: string): string[] {
 const app = express();
 const origenesPermitidos = construirOrigenesPermitidos(env.frontendUrl);
 
-// Detrás de Cloudflare + Nginx (ver 10GuiaSSL.md) hay dos proxies delante del
-// backend. Sin esto, Express usa la IP del proxy como req.ip para TODAS las
-// peticiones, así que express-rate-limit trata a todos los usuarios como uno
-// solo y un único usuario agota el límite para todo el mundo. En local, sin
-// esos proxies, esto no tiene efecto (no llega X-Forwarded-For).
-app.set("trust proxy", 2);
+// Nginx es el único proxy que conecta directo con Node (ver 10GuiaSSL.md);
+// confiamos solo ese salto. Nginx añade su IP vista (la de Cloudflare, un
+// valor de socket TCP real que no se puede falsificar) al final de
+// X-Forwarded-For vía $proxy_add_x_forwarded_for, así que con 1 salto
+// confiado Express toma esa última entrada como req.ip, ignorando cualquier
+// entrada falsa que un cliente haya intentado inyectar antes en la cadena.
+// Ojo: esto NO identifica al visitante final (para eso, ver rateLimiter.ts,
+// que usa CF-Connecting-IP), solo evita que req.ip sea manipulable. En
+// local, sin esos proxies, esto no tiene efecto (no llega X-Forwarded-For).
+app.set("trust proxy", 1);
 
 app.use(helmet());
 app.use(cors({ origin: origenesPermitidos, credentials: true }));
