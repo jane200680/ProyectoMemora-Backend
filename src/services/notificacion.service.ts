@@ -4,6 +4,8 @@ import {
   contarNoLeidas,
   crearNotificacion,
   crearNotificacionesParaUsuarios,
+  eliminarNotificacion as eliminarNotificacionRepo,
+  eliminarTodasNotificaciones as eliminarTodasNotificacionesRepo,
   listarNotificaciones as listarNotificacionesRepo,
   marcarLeida as marcarLeidaRepo,
   marcarTodasLeidas as marcarTodasLeidasRepo,
@@ -68,6 +70,17 @@ export async function marcarNotificacionLeida(idUsuario: number, idNotificacion:
 
 export async function marcarTodasLasNotificacionesLeidas(idUsuario: number) {
   await marcarTodasLeidasRepo(idUsuario);
+}
+
+export async function eliminarNotificacion(idUsuario: number, idNotificacion: number) {
+  const eliminada = await eliminarNotificacionRepo(idNotificacion, idUsuario);
+  if (!eliminada) {
+    throw new HttpError(404, "Notificación no encontrada");
+  }
+}
+
+export async function eliminarTodasLasNotificaciones(idUsuario: number) {
+  await eliminarTodasNotificacionesRepo(idUsuario);
 }
 
 export async function notificarCambioEstadoPublicacion(

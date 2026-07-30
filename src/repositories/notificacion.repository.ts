@@ -64,3 +64,16 @@ export async function marcarTodasLeidas(idUsuario: number): Promise<void> {
     idUsuario,
   ]);
 }
+
+export async function eliminarNotificacion(idNotificacion: number, idUsuario: number): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `DELETE FROM notificacion WHERE id_notificacion = ? AND usuario_id_usuario = ?`,
+    [idNotificacion, idUsuario]
+  );
+
+  return result.affectedRows > 0;
+}
+
+export async function eliminarTodasNotificaciones(idUsuario: number): Promise<void> {
+  await pool.query(`DELETE FROM notificacion WHERE usuario_id_usuario = ?`, [idUsuario]);
+}

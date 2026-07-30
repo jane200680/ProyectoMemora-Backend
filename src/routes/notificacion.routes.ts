@@ -1,5 +1,7 @@
 import { Router } from "express";
 import {
+  deleteNotificacion,
+  deleteTodasNotificaciones,
   getNotificaciones,
   patchNotificacionLeida,
   patchTodasLeidas,
@@ -74,3 +76,42 @@ notificacionRouter.patch("/leidas", patchTodasLeidas);
  *         description: Notificación no encontrada
  */
 notificacionRouter.patch("/:id/leida", patchNotificacionLeida);
+
+/**
+ * @openapi
+ * /notificaciones/{id}:
+ *   delete:
+ *     tags: [Notificaciones]
+ *     summary: Eliminar una notificación específica
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     responses:
+ *       204:
+ *         description: Notificación eliminada
+ *       401:
+ *         description: No autenticado
+ *       404:
+ *         description: Notificación no encontrada
+ */
+notificacionRouter.delete("/:id", deleteNotificacion);
+
+/**
+ * @openapi
+ * /notificaciones:
+ *   delete:
+ *     tags: [Notificaciones]
+ *     summary: Eliminar todas las notificaciones del usuario autenticado
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       204:
+ *         description: Notificaciones eliminadas
+ *       401:
+ *         description: No autenticado
+ */
+notificacionRouter.delete("/", deleteTodasNotificaciones);
