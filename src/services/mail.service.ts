@@ -44,3 +44,28 @@ export async function enviarCorreoRecuperacion(
     `,
   });
 }
+
+export async function enviarCorreoNotificacion(
+  correo: string,
+  nombre: string,
+  mensaje: string,
+  enlace: string
+): Promise<void> {
+  const cliente = obtenerTransporter();
+
+  if (!cliente) {
+    console.warn(`SMTP no configurado: no se pudo enviar la notificación a ${correo}`);
+    return;
+  }
+
+  await cliente.sendMail({
+    from: env.smtp.from,
+    to: correo,
+    subject: "Nueva notificación - Catamayo Memora",
+    html: `
+      <p>Hola ${nombre},</p>
+      <p>${mensaje}</p>
+      <p><a href="${enlace}">Ver en Catamayo Memora</a></p>
+    `,
+  });
+}

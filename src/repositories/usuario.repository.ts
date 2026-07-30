@@ -133,12 +133,14 @@ export async function actualizarPerfil(
   return result.affectedRows > 0;
 }
 
-export async function listarIdsAdministradores(): Promise<number[]> {
+export async function listarAdministradores(): Promise<
+  { id_usuario: number; correo: string; nombre: string }[]
+> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id_usuario FROM usuario WHERE rol = 'Administrador' AND estado = 'Activo'`
+    `SELECT id_usuario, correo, nombre FROM usuario WHERE rol = 'Administrador' AND estado = 'Activo'`
   );
 
-  return rows.map((fila) => fila.id_usuario as number);
+  return rows as { id_usuario: number; correo: string; nombre: string }[];
 }
 
 export async function actualizarEstadoUsuario(

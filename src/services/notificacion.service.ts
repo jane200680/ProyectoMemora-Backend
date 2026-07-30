@@ -1,3 +1,4 @@
+import { env } from "../config/env.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import {
   contarNoLeidas,
@@ -9,9 +10,17 @@ import {
 } from "../repositories/notificacion.repository.js";
 import { obtenerAutorPublicacion } from "../repositories/publicacion.repository.js";
 import {
-  listarIdsAdministradores,
+  buscarPorId,
+  listarAdministradores,
   obtenerNombreUsuario,
 } from "../repositories/usuario.repository.js";
+import { enviarCorreoNotificacion } from "./mail.service.js";
+
+function avisarPorCorreo(correo: string, nombre: string, mensaje: string, enlace: string) {
+  enviarCorreoNotificacion(correo, nombre, mensaje, enlace).catch((error) => {
+    console.error(`No se pudo enviar el correo de notificación a ${correo}:`, error);
+  });
+}
 
 export interface NotificacionDTO {
   id: number;
@@ -63,6 +72,11 @@ export async function notificarCambioEstadoPublicacion(
       : `Tu publicación "${publicacion.titulo}" fue rechazada. Motivo: ${motivo}`;
 
   await crearNotificacion(publicacion.id_usuario, idPublicacion, mensaje);
+
+  const usuario = await buscarPorId(publicacion.id_usuario);
+  if (usuario) {
+    avisarPorCorreo(usuario.correo, usuario.nombre, mensaje, `${env.frontendUrl}/notificaciones`);
+  }
 }
 
 export async function notificarNuevaInteraccion(
@@ -76,22 +90,32 @@ export async function notificarNuevaInteraccion(
   const actor = await obtenerNombreUsuario(idActor);
   const nombreActor = actor ? `${actor.nombre} ${actor.apellido}` : "Alguien";
   const accion = tipo === "comentario" ? "comentó" : "reaccionó a";
+  const mensaje = `${nombreActor} ${accion} tu publicación "${publicacion.titulo}".`;
 
-  await crearNotificacion(
-    publicacion.id_usuario,
-    idPublicacion,
-    `${nombreActor} ${accion} tu publicación "${publicacion.titulo}".`
-  );
+  await crearNotificacion(publicacion.id_usuario, idPublicacion, mensaje);
+
+  const usuario = await buscarPorId(publicacion.id_usuario);
+  if (usuario) {
+    avisarPorCorreo(usuario.correo, usuario.nombre, mensaje, `${env.frontendUrl}/notificaciones`);
+  }
 }
 
 export async function notificarAdminsPublicacionPendiente(
   idPublicacion: number,
   titulo: string
 ) {
-  const idsAdmins = await listarIdsAdministradores();
+  const admins = await listarAdministradores();
+  if (!admins.length) return;
+
+  const mensaje = `Nueva publicación pendiente de revisión: "${titulo}".`;
+
   await crearNotificacionesParaUsuarios(
-    idsAdmins,
+    admins.map((admin) => admin.id_usuario),
     idPublicacion,
-    `Nueva publicación pendiente de revisión: "${titulo}".`
+    mensaje
   );
+
+  for (const admin of admins) {
+    avisarPorCorreo(admin.correo, admin.nombre, mensaje, `${env.frontendUrl}/admin`);
+  }
 }
