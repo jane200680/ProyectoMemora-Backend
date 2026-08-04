@@ -19,9 +19,17 @@ function resolverIpCliente(req: Request): string {
   return ipKeyGenerator(ip);
 }
 
+// CF-Connecting-IP identifica la IP pública del cliente, pero varios
+// usuarios detrás del mismo NAT (ej. red de pruebas de la universidad, con
+// ~25 personas conectadas a la vez) comparten esa IP y por lo tanto el
+// mismo cupo. Solo el polling de notificaciones (cada 30s) ya son ~750
+// peticiones/15min entre 25 personas; sumando el feed y filtros, unos
+// pocos usuarios concurrentes agotaban las 300 peticiones/15min y dejaban
+// a todos esa IP bloqueados (incluido login, que también pasa por este
+// limiter general). Se sube el límite con margen para ese escenario.
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 300,
+  limit: 6000,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolverIpCliente,
@@ -29,7 +37,7 @@ export const apiRateLimiter = rateLimit({
 
 export const authRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 20,
+  limit: 200,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolverIpCliente,

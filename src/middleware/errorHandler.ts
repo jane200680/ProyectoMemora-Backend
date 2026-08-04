@@ -28,6 +28,11 @@ export function errorHandler(
     return;
   }
 
+  if (err instanceof Error && (err as { type?: string }).type === "entity.too.large") {
+    res.status(413).json({ message: "La solicitud supera el tamaño máximo permitido." });
+    return;
+  }
+
   if (err instanceof MulterError) {
     const mensajes: Partial<Record<MulterError["code"], string>> = {
       LIMIT_FILE_SIZE: "El archivo supera el tamaño máximo permitido.",
