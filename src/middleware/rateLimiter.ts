@@ -11,7 +11,7 @@ function resolverIpCliente(req: Request): string {
 
 export const apiRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 6000,
+  limit: 20000,
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: resolverIpCliente,
