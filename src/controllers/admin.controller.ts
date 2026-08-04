@@ -1,8 +1,13 @@
 import type { Request, Response } from "express";
-import { estadoPublicacionSchema, estadoUsuarioSchema } from "../schemas/admin.schema.js";
+import {
+  eliminarPublicacionAdminSchema,
+  estadoPublicacionSchema,
+  estadoUsuarioSchema,
+} from "../schemas/admin.schema.js";
 import {
   actualizarEstadoPublicacion,
   actualizarEstadoUsuario,
+  eliminarPublicacionAdmin,
   listarPublicacionesPendientes,
   listarUsuarios,
 } from "../services/admin.service.js";
@@ -28,4 +33,10 @@ export async function patchEstadoPublicacion(req: Request, res: Response): Promi
   const input = estadoPublicacionSchema.parse(req.body);
   await actualizarEstadoPublicacion(parseIdParam(req.params.id), input);
   res.json({ ok: true });
+}
+
+export async function deletePublicacionAdmin(req: Request, res: Response): Promise<void> {
+  const { motivo } = eliminarPublicacionAdminSchema.parse(req.body ?? {});
+  await eliminarPublicacionAdmin(parseIdParam(req.params.id), motivo);
+  res.status(204).send();
 }

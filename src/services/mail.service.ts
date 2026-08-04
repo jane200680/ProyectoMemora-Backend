@@ -136,10 +136,21 @@ export async function enviarCorreoRecuperacion(
       "Si tú no solicitaste este cambio, puedes ignorar este correo: tu contraseña actual seguirá funcionando con normalidad.",
   });
 
+  const texto = [
+    `Hola, ${nombre}.`,
+    "",
+    "Recibimos una solicitud para restablecer la contraseña de tu cuenta en Catamayo Memora.",
+    "Este enlace es válido durante 1 hora:",
+    enlace,
+    "",
+    "Si tú no solicitaste este cambio, puedes ignorar este correo.",
+  ].join("\n");
+
   await cliente.sendMail({
     from: `"Catamayo Memora" <${env.smtp.from}>`,
     to: correo,
     subject: "Recupera tu contraseña – Catamayo Memora",
+    text: texto,
     html,
     attachments: obtenerAdjuntoLogo(),
   });
@@ -167,10 +178,13 @@ export async function enviarCorreoNotificacion(
     notaPie: "Recibiste este correo porque tienes activadas las notificaciones de tu cuenta en Catamayo Memora.",
   });
 
+  const texto = [`Hola, ${nombre}.`, "", mensaje, "", enlace].join("\n");
+
   await cliente.sendMail({
     from: `"Catamayo Memora" <${env.smtp.from}>`,
     to: correo,
     subject: "Nueva notificación – Catamayo Memora",
+    text: texto,
     html,
     attachments: obtenerAdjuntoLogo(),
   });

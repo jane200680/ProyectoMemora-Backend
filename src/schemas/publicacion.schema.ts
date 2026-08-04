@@ -60,3 +60,10 @@ export const feedQuerySchema = z.object({
 });
 
 export type FeedQueryInput = z.infer<typeof feedQuerySchema>;
+
+export const misPublicacionesQuerySchema = z.object({
+  pagina: z.coerce.number().int().positive().optional().default(1),
+  limite: z.coerce.number().int().positive().max(50).optional().default(10),
+});
+
+export type MisPublicacionesQueryInput = z.infer<typeof misPublicacionesQuerySchema>;

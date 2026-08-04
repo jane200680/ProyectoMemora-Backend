@@ -1,14 +1,19 @@
 import { HttpError } from "../middleware/errorHandler.js";
 import {
   actualizarEstadoPublicacion as actualizarEstadoPublicacionRepo,
+  eliminarPublicacion as eliminarPublicacionRepo,
   findPendientes,
+  obtenerAutorPublicacion,
 } from "../repositories/publicacion.repository.js";
 import {
   actualizarEstadoUsuario as actualizarEstadoUsuarioRepo,
   listarUsuarios as listarUsuariosRepo,
 } from "../repositories/usuario.repository.js";
 import type { EstadoPublicacionInput, EstadoUsuarioInput } from "../schemas/admin.schema.js";
-import { notificarCambioEstadoPublicacion } from "./notificacion.service.js";
+import {
+  notificarCambioEstadoPublicacion,
+  notificarEliminacionPublicacion,
+} from "./notificacion.service.js";
 
 export async function listarUsuarios() {
   return listarUsuariosRepo();
@@ -44,4 +49,14 @@ export async function actualizarEstadoPublicacion(
   }
 
   await notificarCambioEstadoPublicacion(idPublicacion, input.estado, input.motivo);
+}
+
+export async function eliminarPublicacionAdmin(idPublicacion: number, motivo?: string) {
+  const publicacion = await obtenerAutorPublicacion(idPublicacion);
+  if (!publicacion) {
+    throw new HttpError(404, "Publicación no encontrada");
+  }
+
+  await eliminarPublicacionRepo(idPublicacion);
+  await notificarEliminacionPublicacion(publicacion.id_usuario, publicacion.titulo, motivo);
 }

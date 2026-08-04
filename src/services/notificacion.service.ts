@@ -125,6 +125,25 @@ export async function notificarNuevaInteraccion(
   }
 }
 
+// No se crea una notificación persistida (tabla `notificacion`) porque su
+// columna `publicacion_cultural_id_publicacion` es NOT NULL con ON DELETE
+// CASCADE: al eliminar la publicación se borraría también la notificación.
+// Por eso aquí solo se avisa por correo.
+export async function notificarEliminacionPublicacion(
+  idUsuario: number,
+  titulo: string,
+  motivo?: string
+) {
+  const usuario = await buscarPorId(idUsuario);
+  if (!usuario) return;
+
+  const mensaje = motivo
+    ? `Tu publicación "${titulo}" fue eliminada por el equipo de moderación. Motivo: ${motivo}`
+    : `Tu publicación "${titulo}" fue eliminada por el equipo de moderación.`;
+
+  avisarPorCorreo(usuario.correo, usuario.nombre, mensaje, `${env.frontendUrl}/feed`);
+}
+
 export async function notificarAdminsPublicacionPendiente(
   idPublicacion: number,
   titulo: string

@@ -3,12 +3,14 @@ import {
   crearPublicacionSchema,
   editarPublicacionSchema,
   feedQuerySchema,
+  misPublicacionesQuerySchema,
 } from "../schemas/publicacion.schema.js";
 import {
   crearPublicacion,
   editarPublicacion,
   eliminarPublicacion,
   obtenerFeed,
+  obtenerFeedPropio,
   obtenerPublicacionPorId,
   obtenerPublicacionPropia,
 } from "../services/publicacion.service.js";
@@ -26,6 +28,12 @@ export async function getFeed(req: Request, res: Response): Promise<void> {
     anio,
     q,
   });
+  res.json(feed);
+}
+
+export async function getMisPublicaciones(req: Request, res: Response): Promise<void> {
+  const { pagina, limite } = misPublicacionesQuerySchema.parse(req.query);
+  const feed = await obtenerFeedPropio(req.user!.id_usuario, pagina, limite);
   res.json(feed);
 }
 

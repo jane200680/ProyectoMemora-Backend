@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  deletePublicacionAdmin,
   getPublicacionesPendientes,
   getUsuarios,
   patchEstadoPublicacion,
@@ -114,6 +115,37 @@ adminRouter.get("/publicaciones/pendientes", getPublicacionesPendientes);
  *         description: No autorizado
  */
 adminRouter.patch("/publicaciones/:id/estado", patchEstadoPublicacion);
+
+/**
+ * @openapi
+ * /admin/publicaciones/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Eliminar cualquier publicación (moderación)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               motivo: { type: string }
+ *     responses:
+ *       204:
+ *         description: Publicación eliminada
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Publicación no encontrada
+ */
+adminRouter.delete("/publicaciones/:id", deletePublicacionAdmin);
 
 /**
  * @openapi

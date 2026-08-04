@@ -349,6 +349,60 @@ export async function countFeedAprobado(filtros: FeedFiltros = {}): Promise<numb
   return Number(rows[0]?.total ?? 0);
 }
 
+export async function findFeedPorUsuario(
+  idUsuario: number,
+  limite: number,
+  offset: number
+): Promise<PublicacionFeedRow[]> {
+  const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
+    `SELECT
+       p.id_publicacion,
+       p.titulo,
+       p.descripcion,
+       p.tipo_contenido,
+       p.estado,
+       p.fecha_publicacion,
+       u.id_usuario,
+       u.nombre,
+       u.apellido,
+       u.foto_perfil,
+       (SELECT am.url_archivo FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion
+         ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
+       (SELECT GROUP_CONCAT(am.url_archivo ORDER BY am.id_archivo ASC SEPARATOR '||')
+         FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion AND am.tipo_archivo = 'Imagen') AS imagenes,
+       (SELECT GROUP_CONCAT(CONCAT(am.tipo_archivo, '::', am.url_archivo) ORDER BY am.id_archivo ASC SEPARATOR '||')
+         FROM archivo_multimedia am
+         WHERE am.id_publicacion = p.id_publicacion) AS archivos_raw,
+       (SELECT COUNT(*) FROM comentario c
+         WHERE c.id_publicacion = p.id_publicacion) AS total_comentarios,
+       (SELECT COUNT(*) FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion) AS total_reacciones,
+       EXISTS(
+         SELECT 1 FROM reaccion r
+         WHERE r.id_publicacion = p.id_publicacion AND r.id_usuario = ?
+       ) AS reacciono
+     FROM publicacion_cultural p
+     JOIN usuario u ON u.id_usuario = p.id_usuario
+     WHERE p.id_usuario = ?
+     ORDER BY p.fecha_publicacion DESC
+     LIMIT ? OFFSET ?`,
+    [idUsuario, idUsuario, limite, offset]
+  );
+
+  return rows;
+}
+
+export async function countFeedPorUsuario(idUsuario: number): Promise<number> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT COUNT(*) AS total FROM publicacion_cultural WHERE id_usuario = ?`,
+    [idUsuario]
+  );
+
+  return Number(rows[0]?.total ?? 0);
+}
+
 export async function findPendientes(): Promise<PublicacionFeedRow[]> {
   const [rows] = await pool.query<(PublicacionFeedRow & RowDataPacket)[]>(
     `SELECT

@@ -1,9 +1,11 @@
 import {
   actualizarPublicacion as actualizarPublicacionRepo,
   countFeedAprobado,
+  countFeedPorUsuario,
   crearPublicacion as crearPublicacionRepo,
   eliminarPublicacion as eliminarPublicacionRepo,
   findFeedAprobado,
+  findFeedPorUsuario,
   findPublicacionAprobadaPorId,
   obtenerAutorPublicacion,
   obtenerDetallePublicacion,
@@ -40,6 +42,7 @@ export interface FeedItemDTO {
   comentarios: number;
   reacciones: number;
   reacciono: boolean;
+  estado?: "Pendiente" | "Aprobada" | "Rechazada";
 }
 
 function parsearArchivos(raw: string | null): ArchivoFeedDTO[] {
@@ -74,6 +77,7 @@ function mapFilaAFeedItem(fila: PublicacionFeedRow): FeedItemDTO {
     comentarios: fila.total_comentarios,
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),
+    ...(fila.estado ? { estado: fila.estado } : {}),
   };
 }
 
@@ -88,6 +92,27 @@ export async function obtenerFeed(
   const [filas, total] = await Promise.all([
     findFeedAprobado(limite, offset, idUsuarioActual, filtros),
     countFeedAprobado(filtros),
+  ]);
+
+  return {
+    data: filas.map(mapFilaAFeedItem),
+    pagina,
+    limite,
+    total,
+    totalPaginas: Math.max(1, Math.ceil(total / limite)),
+  };
+}
+
+export async function obtenerFeedPropio(
+  idUsuario: number,
+  pagina: number,
+  limite: number
+): Promise<FeedDTO> {
+  const offset = (pagina - 1) * limite;
+
+  const [filas, total] = await Promise.all([
+    findFeedPorUsuario(idUsuario, limite, offset),
+    countFeedPorUsuario(idUsuario),
   ]);
 
   return {

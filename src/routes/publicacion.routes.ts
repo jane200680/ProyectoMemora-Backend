@@ -3,6 +3,7 @@ import { getComentarios, postComentario } from "../controllers/comentario.contro
 import {
   deletePublicacion,
   getFeed,
+  getMisPublicaciones,
   getPublicacionPorId,
   getPublicacionPropia,
   patchPublicacion,
@@ -85,6 +86,29 @@ publicacionRouter.get("/", authenticateOpcional, getFeed);
  *         description: No autenticado
  */
 publicacionRouter.post("/", authenticate, uploadArchivosMultimedia, postPublicacion);
+
+/**
+ * @openapi
+ * /publicaciones/mias:
+ *   get:
+ *     tags: [Publicaciones]
+ *     summary: Obtener las publicaciones propias del usuario autenticado (cualquier estado)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: pagina
+ *         schema: { type: integer, default: 1 }
+ *       - in: query
+ *         name: limite
+ *         schema: { type: integer, default: 10, maximum: 50 }
+ *     responses:
+ *       200:
+ *         description: Publicaciones del usuario autenticado
+ *       401:
+ *         description: No autenticado
+ */
+publicacionRouter.get("/mias", authenticate, getMisPublicaciones);
 
 /**
  * @openapi

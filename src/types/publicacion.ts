@@ -8,6 +8,8 @@ export type TipoContenido =
   | "Evento cultural"
   | "Lugar recomendado";
 
+export type EstadoPublicacion = "Pendiente" | "Aprobada" | "Rechazada";
+
 export interface PublicacionFeedRow {
   id_publicacion: number;
   titulo: string;
@@ -24,6 +26,7 @@ export interface PublicacionFeedRow {
   total_comentarios: number;
   total_reacciones: number;
   reacciono: number;
+  estado?: EstadoPublicacion;
 }
 
 export interface FeedQuery {
