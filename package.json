@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc",
+    "build": "tsc && node -e \"const fs=require('fs');fs.mkdirSync('dist/assets',{recursive:true});fs.copyFileSync('src/assets/logo.png','dist/assets/logo.png')\"",
     "start": "node dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
