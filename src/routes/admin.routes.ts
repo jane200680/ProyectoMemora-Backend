@@ -1,5 +1,6 @@
 import { Router } from "express";
 import {
+  deleteComentarioAdmin,
   deletePublicacionAdmin,
   getPublicacionesPendientes,
   getUsuarios,
@@ -146,6 +147,37 @@ adminRouter.patch("/publicaciones/:id/estado", patchEstadoPublicacion);
  *         description: Publicación no encontrada
  */
 adminRouter.delete("/publicaciones/:id", deletePublicacionAdmin);
+
+/**
+ * @openapi
+ * /admin/comentarios/{id}:
+ *   delete:
+ *     tags: [Admin]
+ *     summary: Eliminar cualquier comentario (moderación)
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema: { type: integer }
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               motivo: { type: string }
+ *     responses:
+ *       204:
+ *         description: Comentario eliminado
+ *       403:
+ *         description: No autorizado
+ *       404:
+ *         description: Comentario no encontrado
+ */
+adminRouter.delete("/comentarios/:id", deleteComentarioAdmin);
 
 /**
  * @openapi

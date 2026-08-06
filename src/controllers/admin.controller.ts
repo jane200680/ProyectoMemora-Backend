@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import {
+  eliminarComentarioAdminSchema,
   eliminarPublicacionAdminSchema,
   estadoPublicacionSchema,
   estadoUsuarioSchema,
@@ -11,6 +12,7 @@ import {
   listarPublicacionesPendientes,
   listarUsuarios,
 } from "../services/admin.service.js";
+import { eliminarComentarioAdmin } from "../services/comentario.service.js";
 import { parseIdParam } from "../utils/parseId.js";
 
 export async function getUsuarios(req: Request, res: Response): Promise<void> {
@@ -38,5 +40,11 @@ export async function patchEstadoPublicacion(req: Request, res: Response): Promi
 export async function deletePublicacionAdmin(req: Request, res: Response): Promise<void> {
   const { motivo } = eliminarPublicacionAdminSchema.parse(req.body ?? {});
   await eliminarPublicacionAdmin(parseIdParam(req.params.id), motivo);
+  res.status(204).send();
+}
+
+export async function deleteComentarioAdmin(req: Request, res: Response): Promise<void> {
+  const { motivo } = eliminarComentarioAdminSchema.parse(req.body ?? {});
+  await eliminarComentarioAdmin(parseIdParam(req.params.id), motivo);
   res.status(204).send();
 }

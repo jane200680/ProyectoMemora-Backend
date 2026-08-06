@@ -18,6 +18,10 @@ export const eliminarPublicacionAdminSchema = z.object({
   motivo: z.string().trim().min(3).max(500).optional(),
 });
 
+export const eliminarComentarioAdminSchema = z.object({
+  motivo: z.string().trim().min(3).max(500).optional(),
+});
+
 export const categoriaSchema = z.object({
   nombre_categoria: z.string().trim().min(2).max(100),
   descripcion: z.string().trim().max(1000).optional(),
@@ -35,5 +39,6 @@ export const lugarSchema = z.object({
 export type EstadoUsuarioInput = z.infer<typeof estadoUsuarioSchema>;
 export type EstadoPublicacionInput = z.infer<typeof estadoPublicacionSchema>;
 export type EliminarPublicacionAdminInput = z.infer<typeof eliminarPublicacionAdminSchema>;
+export type EliminarComentarioAdminInput = z.infer<typeof eliminarComentarioAdminSchema>;
 export type CategoriaInput = z.infer<typeof categoriaSchema>;
 export type LugarInput = z.infer<typeof lugarSchema>;

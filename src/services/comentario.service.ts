@@ -1,10 +1,13 @@
 import {
   crearComentario as crearComentarioRepo,
+  eliminarComentario as eliminarComentarioRepo,
   listarComentarios,
+  obtenerAutorComentario,
 } from "../repositories/comentario.repository.js";
+import { HttpError } from "../middleware/errorHandler.js";
 import type { CrearComentarioInput } from "../schemas/interaccion.schema.js";
 import type { ComentarioRow } from "../types/interaccion.js";
-import { notificarNuevaInteraccion } from "./notificacion.service.js";
+import { notificarEliminacionComentario, notificarNuevaInteraccion } from "./notificacion.service.js";
 
 export interface ComentarioDTO {
   id: number;
@@ -56,4 +59,14 @@ export async function crearComentario(
   const id = await crearComentarioRepo(idUsuario, idPublicacion, input);
   await notificarNuevaInteraccion(idPublicacion, idUsuario, "comentario");
   return { id_comentario: id };
+}
+
+export async function eliminarComentarioAdmin(idComentario: number, motivo?: string) {
+  const comentario = await obtenerAutorComentario(idComentario);
+  if (!comentario) {
+    throw new HttpError(404, "Comentario no encontrado");
+  }
+
+  await eliminarComentarioRepo(idComentario);
+  await notificarEliminacionComentario(comentario.id_usuario, motivo);
 }

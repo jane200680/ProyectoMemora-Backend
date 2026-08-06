@@ -30,3 +30,23 @@ export async function crearComentario(
 
   return result.insertId;
 }
+
+export async function obtenerAutorComentario(
+  idComentario: number
+): Promise<{ id_usuario: number; id_publicacion: number } | null> {
+  const [rows] = await pool.query<RowDataPacket[]>(
+    `SELECT id_usuario, id_publicacion FROM comentario WHERE id_comentario = ?`,
+    [idComentario]
+  );
+
+  return (rows[0] as { id_usuario: number; id_publicacion: number } | undefined) ?? null;
+}
+
+export async function eliminarComentario(idComentario: number): Promise<boolean> {
+  const [result] = await pool.query<ResultSetHeader>(
+    `DELETE FROM comentario WHERE id_comentario = ?`,
+    [idComentario]
+  );
+
+  return result.affectedRows > 0;
+}

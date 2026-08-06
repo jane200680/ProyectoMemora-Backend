@@ -144,6 +144,17 @@ export async function notificarEliminacionPublicacion(
   avisarPorCorreo(usuario.correo, usuario.nombre, mensaje, `${env.frontendUrl}/feed`);
 }
 
+export async function notificarEliminacionComentario(idUsuario: number, motivo?: string) {
+  const usuario = await buscarPorId(idUsuario);
+  if (!usuario) return;
+
+  const mensaje = motivo
+    ? `Uno de tus comentarios fue eliminado por el equipo de moderación. Motivo: ${motivo}`
+    : "Uno de tus comentarios fue eliminado por el equipo de moderación.";
+
+  avisarPorCorreo(usuario.correo, usuario.nombre, mensaje, `${env.frontendUrl}/feed`);
+}
+
 export async function notificarAdminsPublicacionPendiente(
   idPublicacion: number,
   titulo: string
