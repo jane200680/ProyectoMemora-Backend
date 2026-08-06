@@ -1,6 +1,3 @@
-import fs from "node:fs";
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import nodemailer from "nodemailer";
 import { env } from "../config/env.js";
 
@@ -19,22 +16,6 @@ function obtenerTransporter() {
   }
 
   return transporter;
-}
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RUTA_LOGO = path.resolve(__dirname, "../assets/logo.png");
-const CID_LOGO = "logo-catamayo-memora";
-
-function obtenerAdjuntoLogo() {
-  if (!fs.existsSync(RUTA_LOGO)) return [];
-
-  return [
-    {
-      filename: "logo.png",
-      path: RUTA_LOGO,
-      cid: CID_LOGO,
-    },
-  ];
 }
 
 function construirPlantilla(opciones: {
@@ -74,8 +55,7 @@ function construirPlantilla(opciones: {
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,0.06);font-family:Arial,Helvetica,sans-serif;">
             <tr>
               <td align="center" style="background-color:#0f3d2e;padding:28px 24px;">
-                <img src="cid:${CID_LOGO}" alt="Catamayo Memora" width="72" style="display:block;margin:0 auto 8px;border-radius:8px;" />
-                <span style="color:#ffffff;font-size:18px;font-weight:bold;letter-spacing:0.3px;">Catamayo Memora</span>
+                <span style="color:#ffffff;font-size:20px;font-weight:bold;letter-spacing:0.3px;">Catamayo Memora</span>
               </td>
             </tr>
             <tr>
@@ -152,7 +132,6 @@ export async function enviarCorreoRecuperacion(
     subject: "Recupera tu contraseña – Catamayo Memora",
     text: texto,
     html,
-    attachments: obtenerAdjuntoLogo(),
   });
 }
 
@@ -186,6 +165,5 @@ export async function enviarCorreoNotificacion(
     subject: "Nueva notificación – Catamayo Memora",
     text: texto,
     html,
-    attachments: obtenerAdjuntoLogo(),
   });
 }
