@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   forgotPassword,
   login,
+  loginGoogle,
   patchPerfil,
   register,
   resetPassword,
@@ -69,6 +70,37 @@ authRouter.post("/register", authRateLimiter, register);
  *               $ref: '#/components/schemas/Error'
  */
 authRouter.post("/login", authRateLimiter, login);
+
+/**
+ * @openapi
+ * /auth/google:
+ *   post:
+ *     tags: [Auth]
+ *     summary: Iniciar sesión (o registrarse) con Google
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [id_token]
+ *             properties:
+ *               id_token: { type: string, description: "Credential (ID token) devuelto por Google Identity Services" }
+ *     responses:
+ *       200:
+ *         description: Sesión iniciada
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/AuthResponse'
+ *       401:
+ *         description: Token de Google inválido o expirado
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error'
+ */
+authRouter.post("/google", authRateLimiter, loginGoogle);
 
 /**
  * @openapi

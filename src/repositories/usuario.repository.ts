@@ -14,7 +14,8 @@ export interface NuevoUsuarioInput {
 
 export async function crearUsuario(
   input: NuevoUsuarioInput,
-  contrasenaHash: string
+  contrasenaHash: string | null,
+  googleId?: string
 ): Promise<number> {
   const connection = await pool.getConnection();
 
@@ -22,9 +23,9 @@ export async function crearUsuario(
     await connection.beginTransaction();
 
     const [usuarioResult] = await connection.query<ResultSetHeader>(
-      `INSERT INTO usuario (nombre_usuario, nombre, apellido, correo)
-       VALUES (?, ?, ?, ?)`,
-      [input.nombre_usuario, input.nombre, input.apellido, input.correo]
+      `INSERT INTO usuario (nombre_usuario, nombre, apellido, correo, google_id)
+       VALUES (?, ?, ?, ?, ?)`,
+      [input.nombre_usuario, input.nombre, input.apellido, input.correo, googleId ?? null]
     );
 
     const idUsuario = usuarioResult.insertId;
@@ -57,6 +58,34 @@ export async function buscarPorCorreoConHash(correo: string): Promise<UsuarioCon
   );
 
   return rows[0] ?? null;
+}
+
+export async function buscarPorCorreo(correo: string): Promise<Usuario | null> {
+  const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+     FROM usuario
+     WHERE correo = ?
+     LIMIT 1`,
+    [correo]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function buscarPorGoogleId(googleId: string): Promise<Usuario | null> {
+  const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+     FROM usuario
+     WHERE google_id = ?
+     LIMIT 1`,
+    [googleId]
+  );
+
+  return rows[0] ?? null;
+}
+
+export async function vincularGoogleId(idUsuario: number, googleId: string): Promise<void> {
+  await pool.query(`UPDATE usuario SET google_id = ? WHERE id_usuario = ?`, [googleId, idUsuario]);
 }
 
 export async function actualizarUltimoAcceso(idUsuario: number): Promise<void> {

@@ -23,9 +23,11 @@ CREATE TABLE IF NOT EXISTS `memora`.`usuario` (
   `estado` ENUM('Activo', 'Inactivo', 'Suspendido') NOT NULL DEFAULT 'Activo',
   `fecha_registro` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   `foto_perfil` VARCHAR(255) NULL DEFAULT NULL,
+  `google_id` VARCHAR(255) NULL DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE INDEX `nombre_usuario` (`nombre_usuario` ASC) VISIBLE,
-  UNIQUE INDEX `correo` (`correo` ASC) VISIBLE)
+  UNIQUE INDEX `correo` (`correo` ASC) VISIBLE,
+  UNIQUE INDEX `google_id` (`google_id` ASC) VISIBLE)
 ENGINE = InnoDB
 DEFAULT CHARACTER SET = utf8mb4
 COLLATE = utf8mb4_0900_ai_ci;
@@ -79,7 +81,7 @@ COLLATE = utf8mb4_0900_ai_ci;
 -- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `memora`.`autenticacion` (
   `id_autenticacion` INT NOT NULL AUTO_INCREMENT,
-  `contrasena_hash` VARCHAR(255) NOT NULL,
+  `contrasena_hash` VARCHAR(255) NULL DEFAULT NULL,
   `ultimo_acceso` DATETIME NULL DEFAULT NULL,
   `fecha_actualizacion` DATETIME NULL DEFAULT NULL,
   `usuario_id_usuario` INT NOT NULL,

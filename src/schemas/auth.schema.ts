@@ -33,6 +33,12 @@ export const loginSchema = z.object({
 
 export type LoginInput = z.infer<typeof loginSchema>;
 
+export const googleLoginSchema = z.object({
+  id_token: z.string().min(1),
+});
+
+export type GoogleLoginInput = z.infer<typeof googleLoginSchema>;
+
 export const actualizarPerfilSchema = z.object({
   nombre_usuario: z.string().trim().min(3).max(100),
   nombre: soloLetrasSchema(1, 100),

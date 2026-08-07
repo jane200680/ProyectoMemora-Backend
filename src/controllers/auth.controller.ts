@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import {
   actualizarPerfilSchema,
   forgotPasswordSchema,
+  googleLoginSchema,
   loginSchema,
   registerSchema,
   resetPasswordSchema,
@@ -9,6 +10,7 @@ import {
 import {
   actualizarPerfil,
   iniciarSesion,
+  iniciarSesionGoogle,
   registrar,
   restablecerContrasena,
   solicitarRestablecimiento,
@@ -23,6 +25,12 @@ export async function register(req: Request, res: Response): Promise<void> {
 export async function login(req: Request, res: Response): Promise<void> {
   const input = loginSchema.parse(req.body);
   const resultado = await iniciarSesion(input);
+  res.status(200).json(resultado);
+}
+
+export async function loginGoogle(req: Request, res: Response): Promise<void> {
+  const input = googleLoginSchema.parse(req.body);
+  const resultado = await iniciarSesionGoogle(input.id_token);
   res.status(200).json(resultado);
 }
 

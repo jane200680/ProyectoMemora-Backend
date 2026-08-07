@@ -44,4 +44,8 @@ export const env = {
     region: process.env.AWS_REGION ?? "us-east-1",
     bucket: process.env.AWS_S3_BUCKET ?? "",
   },
+
+  google: {
+    clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+  },
 };

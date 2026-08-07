@@ -13,5 +13,5 @@ export interface Usuario {
 }
 
 export interface UsuarioConHash extends Usuario {
-  contrasena_hash: string;
+  contrasena_hash: string | null;
 }

@@ -1,15 +1,19 @@
 import bcrypt from "bcrypt";
 import crypto from "node:crypto";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 import { env } from "../config/env.js";
 import { HttpError } from "../middleware/errorHandler.js";
 import {
   actualizarContrasena,
   actualizarPerfil as actualizarPerfilRepo,
   actualizarUltimoAcceso,
+  buscarPorCorreo,
   buscarPorCorreoConHash,
+  buscarPorGoogleId,
   buscarPorId,
   crearUsuario,
+  vincularGoogleId,
 } from "../repositories/usuario.repository.js";
 import {
   buscarRestablecimientoValido,
@@ -63,18 +67,20 @@ function generarNombreUsuario(correo: string): string {
 
 const INTENTOS_NOMBRE_USUARIO = 5;
 
-export async function registrar(input: RegisterInput): Promise<{ id_usuario: number }> {
-  const contrasenaHash = await bcrypt.hash(input.contrasena, SALT_ROUNDS);
-
+async function crearUsuarioConReintento(
+  datosBase: { nombre: string; apellido: string; correo: string },
+  contrasenaHash: string | null,
+  googleId?: string
+): Promise<number> {
   for (let intento = 0; intento < INTENTOS_NOMBRE_USUARIO; intento++) {
-    const nombreUsuario = generarNombreUsuario(input.correo);
+    const nombreUsuario = generarNombreUsuario(datosBase.correo);
 
     try {
-      const idUsuario = await crearUsuario(
-        { nombre_usuario: nombreUsuario, nombre: input.nombre, apellido: input.apellido, correo: input.correo },
-        contrasenaHash
+      return await crearUsuario(
+        { nombre_usuario: nombreUsuario, ...datosBase },
+        contrasenaHash,
+        googleId
       );
-      return { id_usuario: idUsuario };
     } catch (error) {
       if (esConflictoDeNombreUsuario(error)) continue;
       if (esErrorDeDuplicado(error)) {
@@ -87,11 +93,30 @@ export async function registrar(input: RegisterInput): Promise<{ id_usuario: num
   throw new HttpError(500, "No se pudo completar el registro. Intenta de nuevo.");
 }
 
+function firmarToken(usuario: Usuario): string {
+  return jwt.sign({ id_usuario: usuario.id_usuario, rol: usuario.rol }, env.jwt.secret, {
+    expiresIn: env.jwt.expiresIn,
+  } as jwt.SignOptions);
+}
+
+export async function registrar(input: RegisterInput): Promise<{ id_usuario: number }> {
+  const contrasenaHash = await bcrypt.hash(input.contrasena, SALT_ROUNDS);
+  const idUsuario = await crearUsuarioConReintento(input, contrasenaHash);
+  return { id_usuario: idUsuario };
+}
+
 export async function iniciarSesion(input: LoginInput): Promise<{ token: string; usuario: Usuario }> {
   const usuarioConHash = await buscarPorCorreoConHash(input.correo);
 
   if (!usuarioConHash) {
     throw new HttpError(401, "Correo o contraseña incorrectos");
+  }
+
+  if (!usuarioConHash.contrasena_hash) {
+    throw new HttpError(
+      401,
+      "Esta cuenta inicia sesión con Google. Usa el botón 'Continuar con Google'."
+    );
   }
 
   const contrasenaValida = await bcrypt.compare(input.contrasena, usuarioConHash.contrasena_hash);
@@ -107,9 +132,66 @@ export async function iniciarSesion(input: LoginInput): Promise<{ token: string;
 
   const { contrasena_hash: _contrasenaHash, ...usuario } = usuarioConHash;
 
-  const token = jwt.sign({ id_usuario: usuario.id_usuario, rol: usuario.rol }, env.jwt.secret, {
-    expiresIn: env.jwt.expiresIn,
-  } as jwt.SignOptions);
+  const token = firmarToken(usuario);
+
+  return { token, usuario };
+}
+
+const googleClient = new OAuth2Client(env.google.clientId);
+
+export async function iniciarSesionGoogle(idToken: string): Promise<{ token: string; usuario: Usuario }> {
+  if (!env.google.clientId) {
+    throw new HttpError(500, "El inicio de sesión con Google no está configurado");
+  }
+
+  let payload;
+  try {
+    const ticket = await googleClient.verifyIdToken({ idToken, audience: env.google.clientId });
+    payload = ticket.getPayload();
+  } catch {
+    throw new HttpError(401, "Token de Google inválido o expirado");
+  }
+
+  if (!payload?.email || !payload.sub) {
+    throw new HttpError(401, "Token de Google inválido");
+  }
+  if (!payload.email_verified) {
+    throw new HttpError(401, "El correo de tu cuenta de Google no está verificado");
+  }
+
+  let usuario = await buscarPorGoogleId(payload.sub);
+
+  if (!usuario) {
+    const usuarioExistente = await buscarPorCorreo(payload.email);
+
+    if (usuarioExistente) {
+      await vincularGoogleId(usuarioExistente.id_usuario, payload.sub);
+      usuario = usuarioExistente;
+    } else {
+      const idUsuario = await crearUsuarioConReintento(
+        {
+          nombre: payload.given_name ?? payload.name ?? "Usuario",
+          apellido: payload.family_name ?? "Memora",
+          correo: payload.email,
+        },
+        null,
+        payload.sub
+      );
+      usuario = await buscarPorId(idUsuario);
+    }
+  }
+
+  if (!usuario) {
+    throw new HttpError(500, "No se pudo completar el inicio de sesión con Google");
+  }
+
+  if (usuario.estado !== "Activo") {
+    throw new HttpError(403, "Tu cuenta no está activa. Contacta al administrador");
+  }
+
+  await actualizarUltimoAcceso(usuario.id_usuario);
+
+  const token = firmarToken(usuario);
 
   return { token, usuario };
 }
