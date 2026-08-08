@@ -28,7 +28,7 @@ import type {
   RegisterInput,
   ResetPasswordInput,
 } from "../schemas/auth.schema.js";
-import type { Usuario } from "../types/usuario.js";
+import type { Genero, Usuario } from "../types/usuario.js";
 import { subirArchivoS3 } from "./s3.service.js";
 
 function hashToken(token: string): string {
@@ -68,7 +68,7 @@ function generarNombreUsuario(correo: string): string {
 const INTENTOS_NOMBRE_USUARIO = 5;
 
 async function crearUsuarioConReintento(
-  datosBase: { nombre: string; apellido: string; correo: string },
+  datosBase: { nombre: string; apellido: string; correo: string; genero?: Genero },
   contrasenaHash: string | null,
   googleId?: string
 ): Promise<number> {

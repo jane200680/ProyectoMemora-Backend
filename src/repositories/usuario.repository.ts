@@ -2,7 +2,7 @@ import type { ResultSetHeader, RowDataPacket } from "mysql2";
 import { pool } from "../config/database.js";
 import type { EstadoUsuarioInput } from "../schemas/admin.schema.js";
 import type { ActualizarPerfilInput } from "../schemas/auth.schema.js";
-import type { Usuario } from "../types/usuario.js";
+import type { Genero, Usuario } from "../types/usuario.js";
 import type { UsuarioConHash } from "../types/usuario.js";
 
 export interface NuevoUsuarioInput {
@@ -10,6 +10,7 @@ export interface NuevoUsuarioInput {
   nombre: string;
   apellido: string;
   correo: string;
+  genero?: Genero;
 }
 
 export async function crearUsuario(
@@ -23,9 +24,16 @@ export async function crearUsuario(
     await connection.beginTransaction();
 
     const [usuarioResult] = await connection.query<ResultSetHeader>(
-      `INSERT INTO usuario (nombre_usuario, nombre, apellido, correo, google_id)
-       VALUES (?, ?, ?, ?, ?)`,
-      [input.nombre_usuario, input.nombre, input.apellido, input.correo, googleId ?? null]
+      `INSERT INTO usuario (nombre_usuario, nombre, apellido, correo, google_id, genero)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        input.nombre_usuario,
+        input.nombre,
+        input.apellido,
+        input.correo,
+        googleId ?? null,
+        input.genero ?? null,
+      ]
     );
 
     const idUsuario = usuarioResult.insertId;
@@ -49,7 +57,7 @@ export async function crearUsuario(
 export async function buscarPorCorreoConHash(correo: string): Promise<UsuarioConHash | null> {
   const [rows] = await pool.query<(UsuarioConHash & RowDataPacket)[]>(
     `SELECT u.id_usuario, u.nombre_usuario, u.nombre, u.apellido, u.correo,
-            u.rol, u.estado, u.foto_perfil, a.contrasena_hash
+            u.rol, u.estado, u.foto_perfil, u.genero, a.contrasena_hash
      FROM usuario u
      JOIN autenticacion a ON a.usuario_id_usuario = u.id_usuario
      WHERE u.correo = ?
@@ -62,7 +70,7 @@ export async function buscarPorCorreoConHash(correo: string): Promise<UsuarioCon
 
 export async function buscarPorCorreo(correo: string): Promise<Usuario | null> {
   const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
-    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil, genero
      FROM usuario
      WHERE correo = ?
      LIMIT 1`,
@@ -74,7 +82,7 @@ export async function buscarPorCorreo(correo: string): Promise<Usuario | null> {
 
 export async function buscarPorGoogleId(googleId: string): Promise<Usuario | null> {
   const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
-    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil, genero
      FROM usuario
      WHERE google_id = ?
      LIMIT 1`,
@@ -108,7 +116,7 @@ export async function actualizarContrasena(
 
 export async function listarUsuarios(): Promise<Usuario[]> {
   const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
-    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil, genero
      FROM usuario
      ORDER BY id_usuario DESC`
   );
@@ -129,7 +137,7 @@ export async function obtenerNombreUsuario(
 
 export async function buscarPorId(idUsuario: number): Promise<Usuario | null> {
   const [rows] = await pool.query<(Usuario & RowDataPacket)[]>(
-    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil
+    `SELECT id_usuario, nombre_usuario, nombre, apellido, correo, rol, estado, foto_perfil, genero
      FROM usuario
      WHERE id_usuario = ?
      LIMIT 1`,
@@ -146,6 +154,11 @@ export async function actualizarPerfil(
 ): Promise<boolean> {
   const campos = ["nombre_usuario = ?", "nombre = ?", "apellido = ?"];
   const valores: (string | number)[] = [input.nombre_usuario, input.nombre, input.apellido];
+
+  if (input.genero) {
+    campos.push("genero = ?");
+    valores.push(input.genero);
+  }
 
   if (fotoPerfil) {
     campos.push("foto_perfil = ?");

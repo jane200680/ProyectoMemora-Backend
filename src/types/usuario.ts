@@ -1,5 +1,6 @@
 export type Rol = "Administrador" | "Usuario";
 export type EstadoUsuario = "Activo" | "Inactivo" | "Suspendido";
+export type Genero = "Hombre" | "Mujer" | "Prefiero no decir";
 
 export interface Usuario {
   id_usuario: number;
@@ -10,6 +11,7 @@ export interface Usuario {
   rol: Rol;
   estado: EstadoUsuario;
   foto_perfil: string | null;
+  genero: Genero | null;
 }
 
 export interface UsuarioConHash extends Usuario {

@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS `memora`.`usuario` (
   `fecha_registro` DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
   `foto_perfil` VARCHAR(255) NULL DEFAULT NULL,
   `google_id` VARCHAR(255) NULL DEFAULT NULL,
+  `genero` ENUM('Hombre', 'Mujer', 'Prefiero no decir') NULL DEFAULT NULL,
   PRIMARY KEY (`id_usuario`),
   UNIQUE INDEX `nombre_usuario` (`nombre_usuario` ASC) VISIBLE,
   UNIQUE INDEX `correo` (`correo` ASC) VISIBLE,

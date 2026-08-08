@@ -17,11 +17,14 @@ const contrasenaSchema = z
   .regex(/[0-9]/, "La contraseña debe incluir al menos un número")
   .regex(/[^A-Za-z0-9]/, "La contraseña debe incluir al menos un carácter especial");
 
+export const generoSchema = z.enum(["Hombre", "Mujer", "Prefiero no decir"]);
+
 export const registerSchema = z.object({
   nombre: soloLetrasSchema(1, 100),
   apellido: soloLetrasSchema(1, 150),
   correo: z.string().trim().email().max(255),
   contrasena: contrasenaSchema,
+  genero: generoSchema.optional(),
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
@@ -43,6 +46,7 @@ export const actualizarPerfilSchema = z.object({
   nombre_usuario: z.string().trim().min(3).max(100),
   nombre: soloLetrasSchema(1, 100),
   apellido: soloLetrasSchema(1, 150),
+  genero: generoSchema.optional(),
 });
 
 export type ActualizarPerfilInput = z.infer<typeof actualizarPerfilSchema>;
