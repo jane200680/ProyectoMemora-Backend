@@ -33,7 +33,7 @@ export async function getPublicacionesPendientes(req: Request, res: Response): P
 
 export async function patchEstadoPublicacion(req: Request, res: Response): Promise<void> {
   const input = estadoPublicacionSchema.parse(req.body);
-  await actualizarEstadoPublicacion(parseIdParam(req.params.id), input);
+  await actualizarEstadoPublicacion(parseIdParam(req.params.id), input, req.user!.id_usuario);
   res.json({ ok: true });
 }
 

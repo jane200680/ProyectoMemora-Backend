@@ -27,6 +27,10 @@ export interface PublicacionFeedRow {
   total_reacciones: number;
   reacciono: number;
   estado?: EstadoPublicacion;
+  fecha_revision?: Date | null;
+  motivo_rechazo?: string | null;
+  revisado_por_nombre?: string | null;
+  revisado_por_apellido?: string | null;
 }
 
 export interface FeedQuery {

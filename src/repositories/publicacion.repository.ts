@@ -362,10 +362,14 @@ export async function findFeedPorUsuario(
        p.tipo_contenido,
        p.estado,
        p.fecha_publicacion,
+       p.fecha_revision,
+       p.motivo_rechazo,
        u.id_usuario,
        u.nombre,
        u.apellido,
        u.foto_perfil,
+       revisor.nombre AS revisado_por_nombre,
+       revisor.apellido AS revisado_por_apellido,
        (SELECT am.url_archivo FROM archivo_multimedia am
          WHERE am.id_publicacion = p.id_publicacion
          ORDER BY am.id_archivo ASC LIMIT 1) AS imagen,
@@ -385,6 +389,7 @@ export async function findFeedPorUsuario(
        ) AS reacciono
      FROM publicacion_cultural p
      JOIN usuario u ON u.id_usuario = p.id_usuario
+     LEFT JOIN usuario revisor ON revisor.id_usuario = p.revisado_por
      WHERE p.id_usuario = ?
      ORDER BY p.fecha_publicacion DESC
      LIMIT ? OFFSET ?`,
@@ -440,11 +445,14 @@ export async function eliminarPublicacion(idPublicacion: number): Promise<boolea
 
 export async function actualizarEstadoPublicacion(
   idPublicacion: number,
-  input: EstadoPublicacionInput
+  input: EstadoPublicacionInput,
+  idRevisor: number
 ): Promise<boolean> {
   const [result] = await pool.query<ResultSetHeader>(
-    `UPDATE publicacion_cultural SET estado = ? WHERE id_publicacion = ?`,
-    [input.estado, idPublicacion]
+    `UPDATE publicacion_cultural
+     SET estado = ?, revisado_por = ?, fecha_revision = NOW(), motivo_rechazo = ?
+     WHERE id_publicacion = ?`,
+    [input.estado, idRevisor, input.estado === "Rechazada" ? (input.motivo ?? null) : null, idPublicacion]
   );
 
   return result.affectedRows > 0;

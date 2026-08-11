@@ -43,6 +43,9 @@ export interface FeedItemDTO {
   reacciones: number;
   reacciono: boolean;
   estado?: "Pendiente" | "Aprobada" | "Rechazada";
+  fechaRevision?: string | null;
+  motivoRechazo?: string | null;
+  revisadoPor?: string | null;
 }
 
 function parsearArchivos(raw: string | null): ArchivoFeedDTO[] {
@@ -78,6 +81,11 @@ function mapFilaAFeedItem(fila: PublicacionFeedRow): FeedItemDTO {
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),
     ...(fila.estado ? { estado: fila.estado } : {}),
+    ...(fila.fecha_revision ? { fechaRevision: fila.fecha_revision.toISOString() } : {}),
+    ...(fila.motivo_rechazo ? { motivoRechazo: fila.motivo_rechazo } : {}),
+    ...(fila.revisado_por_nombre
+      ? { revisadoPor: `${fila.revisado_por_nombre} ${fila.revisado_por_apellido}` }
+      : {}),
   };
 }
 

@@ -41,9 +41,10 @@ export async function listarPublicacionesPendientes() {
 
 export async function actualizarEstadoPublicacion(
   idPublicacion: number,
-  input: EstadoPublicacionInput
+  input: EstadoPublicacionInput,
+  idRevisor: number
 ) {
-  const actualizado = await actualizarEstadoPublicacionRepo(idPublicacion, input);
+  const actualizado = await actualizarEstadoPublicacionRepo(idPublicacion, input, idRevisor);
   if (!actualizado) {
     throw new HttpError(404, "Publicación no encontrada");
   }
