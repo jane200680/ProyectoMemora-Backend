@@ -39,6 +39,8 @@ export interface FeedItemDTO {
   imagen: string | null;
   imagenes: string[];
   archivos: ArchivoFeedDTO[];
+  anio: number | null;
+  linkGoogleMaps: string | null;
   comentarios: number;
   reacciones: number;
   reacciono: boolean;
@@ -77,6 +79,8 @@ function mapFilaAFeedItem(fila: PublicacionFeedRow): FeedItemDTO {
     imagen: fila.imagen,
     imagenes: fila.imagenes ? fila.imagenes.split("||") : [],
     archivos: parsearArchivos(fila.archivos_raw),
+    anio: fila.anio_contenido,
+    linkGoogleMaps: fila.link_google_maps,
     comentarios: fila.total_comentarios,
     reacciones: fila.total_reacciones,
     reacciono: Boolean(fila.reacciono),

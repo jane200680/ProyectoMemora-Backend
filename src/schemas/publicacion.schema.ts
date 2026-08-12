@@ -12,6 +12,16 @@ export const tiposContenido = [
 ] as const;
 
 const anioActual = new Date().getFullYear();
+export const ANIO_MINIMO_CONTENIDO = 1800;
+
+const regexLinkGoogleMaps =
+  /^https:\/\/(www\.)?(google\.[a-z.]{2,6}\/maps|maps\.google\.[a-z.]{2,6}|goo\.gl\/maps|maps\.app\.goo\.gl)\//i;
+
+const linkGoogleMapsSchema = z
+  .string()
+  .trim()
+  .url("Ingresa una URL válida.")
+  .regex(regexLinkGoogleMaps, "Debe ser un link de Google Maps (maps.google.com o maps.app.goo.gl).");
 
 function parseListaIds(value: unknown) {
   if (typeof value === "string") {
@@ -24,28 +34,44 @@ function parseListaIds(value: unknown) {
   return value;
 }
 
-export const crearPublicacionSchema = z.object({
-  titulo: z.string().trim().min(3).max(200),
-  descripcion: z.string().trim().min(10),
-  tipo_contenido: z.enum(tiposContenido),
-  anio_contenido: z.coerce.number().int().min(1800).max(anioActual).optional(),
-  categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).optional(),
-  lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).optional(),
-});
+function requiereLinkGoogleMaps(input: { tipo_contenido: string; link_google_maps?: string }, ctx: z.RefinementCtx) {
+  if (input.tipo_contenido === "Lugar recomendado" && !input.link_google_maps) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Para publicar en la categoría \"Lugar recomendado\" debes ingresar un link de Google Maps.",
+      path: ["link_google_maps"],
+    });
+  }
+}
+
+export const crearPublicacionSchema = z
+  .object({
+    titulo: z.string().trim().min(3).max(200),
+    descripcion: z.string().trim().min(10),
+    tipo_contenido: z.enum(tiposContenido),
+    anio_contenido: z.coerce.number().int().min(ANIO_MINIMO_CONTENIDO).max(anioActual).optional(),
+    link_google_maps: linkGoogleMapsSchema.optional().or(z.literal("")),
+    categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).optional(),
+    lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).optional(),
+  })
+  .superRefine(requiereLinkGoogleMaps);
 
 export type CrearPublicacionInput = z.infer<typeof crearPublicacionSchema>;
 
-export const editarPublicacionSchema = z.object({
-  titulo: z.string().trim().min(3).max(200),
-  descripcion: z.string().trim().min(10),
-  tipo_contenido: z.enum(tiposContenido),
-  anio_contenido: z.coerce.number().int().min(1800).max(anioActual).optional(),
-  categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
-  lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
-  archivos_eliminar: z
-    .preprocess(parseListaIds, z.array(z.coerce.number().int().positive()))
-    .default([]),
-});
+export const editarPublicacionSchema = z
+  .object({
+    titulo: z.string().trim().min(3).max(200),
+    descripcion: z.string().trim().min(10),
+    tipo_contenido: z.enum(tiposContenido),
+    anio_contenido: z.coerce.number().int().min(ANIO_MINIMO_CONTENIDO).max(anioActual).optional(),
+    link_google_maps: linkGoogleMapsSchema.optional().or(z.literal("")),
+    categorias: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
+    lugares: z.preprocess(parseListaIds, z.array(z.coerce.number().int().positive())).default([]),
+    archivos_eliminar: z
+      .preprocess(parseListaIds, z.array(z.coerce.number().int().positive()))
+      .default([]),
+  })
+  .superRefine(requiereLinkGoogleMaps);
 
 export type EditarPublicacionInput = z.infer<typeof editarPublicacionSchema>;
 

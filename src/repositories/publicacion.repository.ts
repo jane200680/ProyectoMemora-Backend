@@ -71,6 +71,8 @@ export async function findFeedAprobado(
        p.descripcion,
        p.tipo_contenido,
        p.fecha_publicacion,
+       p.anio_contenido,
+       p.link_google_maps,
        u.id_usuario,
        u.nombre,
        u.apellido,
@@ -156,9 +158,16 @@ export async function crearPublicacion(
     await conexion.beginTransaction();
 
     const [result] = await conexion.query<ResultSetHeader>(
-      `INSERT INTO publicacion_cultural (titulo, descripcion, tipo_contenido, anio_contenido, id_usuario)
-       VALUES (?, ?, ?, ?, ?)`,
-      [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idUsuario]
+      `INSERT INTO publicacion_cultural (titulo, descripcion, tipo_contenido, anio_contenido, link_google_maps, id_usuario)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [
+        input.titulo,
+        input.descripcion,
+        input.tipo_contenido,
+        input.anio_contenido ?? null,
+        input.link_google_maps || null,
+        idUsuario,
+      ]
     );
 
     const idPublicacion = result.insertId;
@@ -206,6 +215,7 @@ export interface DetallePublicacion {
   descripcion: string;
   tipo_contenido: string;
   anio_contenido: number | null;
+  link_google_maps: string | null;
   categorias: number[];
   lugares: number[];
   archivos: ArchivoMultimediaRow[];
@@ -215,7 +225,7 @@ export async function obtenerDetallePublicacion(
   idPublicacion: number
 ): Promise<DetallePublicacion | null> {
   const [rows] = await pool.query<RowDataPacket[]>(
-    `SELECT id_publicacion, id_usuario, titulo, descripcion, tipo_contenido, anio_contenido
+    `SELECT id_publicacion, id_usuario, titulo, descripcion, tipo_contenido, anio_contenido, link_google_maps
      FROM publicacion_cultural WHERE id_publicacion = ?`,
     [idPublicacion]
   );
@@ -248,6 +258,7 @@ export async function obtenerDetallePublicacion(
     descripcion: fila.descripcion,
     tipo_contenido: fila.tipo_contenido,
     anio_contenido: fila.anio_contenido,
+    link_google_maps: fila.link_google_maps,
     categorias: categoriaRows.map((fila) => fila.id as number),
     lugares: lugarRows.map((fila) => fila.id as number),
     archivos: archivoRows,
@@ -266,9 +277,16 @@ export async function actualizarPublicacion(
 
     await conexion.query(
       `UPDATE publicacion_cultural
-       SET titulo = ?, descripcion = ?, tipo_contenido = ?, anio_contenido = ?, estado = 'Pendiente'
+       SET titulo = ?, descripcion = ?, tipo_contenido = ?, anio_contenido = ?, link_google_maps = ?, estado = 'Pendiente'
        WHERE id_publicacion = ?`,
-      [input.titulo, input.descripcion, input.tipo_contenido, input.anio_contenido ?? null, idPublicacion]
+      [
+        input.titulo,
+        input.descripcion,
+        input.tipo_contenido,
+        input.anio_contenido ?? null,
+        input.link_google_maps || null,
+        idPublicacion,
+      ]
     );
 
     await conexion.query(
@@ -362,6 +380,8 @@ export async function findFeedPorUsuario(
        p.tipo_contenido,
        p.estado,
        p.fecha_publicacion,
+       p.anio_contenido,
+       p.link_google_maps,
        p.fecha_revision,
        p.motivo_rechazo,
        u.id_usuario,

@@ -23,6 +23,8 @@ export interface PublicacionFeedRow {
   imagen: string | null;
   imagenes: string | null;
   archivos_raw: string | null;
+  anio_contenido: number | null;
+  link_google_maps: string | null;
   total_comentarios: number;
   total_reacciones: number;
   reacciono: number;

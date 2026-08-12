@@ -75,6 +75,7 @@ const options: swaggerJsdoc.Options = {
             descripcion: { type: "string" },
             tipo_contenido: { type: "string" },
             anio_contenido: { type: "integer", nullable: true },
+            link_google_maps: { type: "string", nullable: true },
             estado: { type: "string", enum: ["Pendiente", "Aprobada", "Rechazada"] },
           },
         },
@@ -98,6 +99,7 @@ const options: swaggerJsdoc.Options = {
               ],
             },
             anio_contenido: { type: "integer" },
+            link_google_maps: { type: "string" },
             categorias: { type: "array", items: { type: "integer" } },
             lugares: { type: "array", items: { type: "integer" } },
             archivos: {
